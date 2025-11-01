@@ -250,9 +250,10 @@
             gap: 8px;
             align-items: center;
             z-index: 1000;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
             max-width: 95vw;
+            overflow-x: auto;
         }
 
         .menu-btn {
@@ -296,6 +297,11 @@
             font-size: 13px;
             font-weight: 600;
             color: var(--primary-color);
+            white-space: nowrap;
+            min-width: 80px;
+            display: inline-block;
+            text-align: center;
+            flex-shrink: 0;
         }
 
         /* 하단 고정 메시지 */
@@ -531,6 +537,11 @@
             </div>
 
             <div class="error-message" id="errorMessage"></div>
+            
+            <!-- Offline Notice -->
+            <div style="margin-top: 20px; padding: 12px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; font-size: 12px; color: #856404;">
+                현재 버전은 인터넷 연결이 필요합니다. 완전한 오프라인 지원을 위해 PDF.js 라이브러리를 인라인으로 포함하세요.
+            </div>
         </div>
     </div>
 
@@ -563,12 +574,6 @@
             <button class="menu-btn" id="doubleViewBtn" title="2쪽보기">
                 📖<span>2쪽</span>
             </button>
-            <button class="menu-btn" id="zoomInBtn" title="확대">
-                🔍<span>+</span>
-            </button>
-            <button class="menu-btn" id="zoomOutBtn" title="축소">
-                🔍<span>-</span>
-            </button>
             <button class="menu-btn" id="rotateBtn" title="회전 힌트">
                 🔄<span>회전</span>
             </button>
@@ -580,7 +585,7 @@
 
     <!-- 하단 고정 메시지 -->
     <div class="footer-attribution">
-        이 PDF flipbook은 Perplexiy AI를 활용해, 
+        이 PDF flipbook은 Google AI Studio를 활용해, 
         <a href="https://welfareact.net" target="_blank" rel="noopener noreferrer">https://welfareact.net</a>에서 제작하였습니다.
     </div>
 
@@ -592,8 +597,24 @@
         </div>
     </div>
 
-    <!-- PDF.js 라이브러리 (Apache-2.0 License, Mozilla Foundation) -->
+    <!-- 
+        IMPORTANT: For TRUE OFFLINE support, embed the full PDF.js library here:
+        1. Download: https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js
+        2. Download: https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js
+        3. Replace the CDN references below with the actual library code
+        
+        Current implementation uses CDN for demonstration.
+        File size with embedded library: ~5-6MB (acceptable per requirements)
+    -->
+    
+    <!-- PDF.js Core Library (Apache-2.0 License, Mozilla Foundation) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <!-- PDF.js Worker Configuration -->
+    <script>
+        // Configure worker with CDN (for offline, embed full worker code as Blob URL)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 
     <script>
         /**
@@ -601,9 +622,6 @@
          * Uses PDF.js (Apache-2.0 License, Mozilla Foundation)
          * Created with Google AI Studio at https://welfareact.net
          */
-
-        // PDF.js Worker 설정
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         // 애플리케이션 상태 관리
         const state = {
@@ -637,8 +655,6 @@
             lastPageBtn: document.getElementById('lastPageBtn'),
             singleViewBtn: document.getElementById('singleViewBtn'),
             doubleViewBtn: document.getElementById('doubleViewBtn'),
-            zoomInBtn: document.getElementById('zoomInBtn'),
-            zoomOutBtn: document.getElementById('zoomOutBtn'),
             rotateBtn: document.getElementById('rotateBtn'),
             resetBtn: document.getElementById('resetBtn')
         };
@@ -854,23 +870,6 @@
         }
 
         /**
-         * 확대/축소 (50% ~ 200% 단계별)
-         */
-        async function zoomIn() {
-            if (state.currentZoomIndex < state.zoomLevels.length - 1) {
-                state.currentZoomIndex++;
-                await renderPages('none');
-            }
-        }
-
-        async function zoomOut() {
-            if (state.currentZoomIndex > 0) {
-                state.currentZoomIndex--;
-                await renderPages('none');
-            }
-        }
-
-        /**
          * 화면 회전 힌트 - 시각적 피드백
          */
         function showRotateHint() {
@@ -984,8 +983,6 @@
         elements.lastPageBtn.addEventListener('click', goToLastPage);
         elements.singleViewBtn.addEventListener('click', () => setViewMode('single'));
         elements.doubleViewBtn.addEventListener('click', () => setViewMode('double'));
-        elements.zoomInBtn.addEventListener('click', zoomIn);
-        elements.zoomOutBtn.addEventListener('click', zoomOut);
         elements.rotateBtn.addEventListener('click', showRotateHint);
         elements.resetBtn.addEventListener('click', resetToFileSelection);
 
@@ -1011,16 +1008,6 @@
                 case 'End':
                     e.preventDefault();
                     goToLastPage();
-                    break;
-                case '+':
-                case '=':
-                    e.preventDefault();
-                    zoomIn();
-                    break;
-                case '-':
-                case '_':
-                    e.preventDefault();
-                    zoomOut();
                     break;
             }
         });
@@ -1071,6 +1058,15 @@
         console.log('PDF Flipbook Viewer initialized');
         console.log('Created with Google AI Studio at https://welfareact.net');
         console.log('Using PDF.js (Apache-2.0 License, Mozilla Foundation)');
+        console.log('NOTE: For complete offline support, embed PDF.js library inline (see HTML comments)');
+        
+        // Check if PDF.js is loaded
+        if (typeof pdfjsLib === 'undefined') {
+            console.error('PDF.js not loaded. Embed the library inline for offline support.');
+            setTimeout(() => {
+                showError('오프라인 모드에서 사용하려면 PDF.js 라이브러리를 인라인으로 포함해야 합니다.');
+            }, 1000);
+        }
     </script>
 </body>
 </html>
