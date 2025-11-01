@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PDF Flipbook</title>
+<!-- PDF.js library -->
+<script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
+<style>
+  /* 기본 및 플렉서블 디자인, 애니메이션 효과 적용 */
+  html, body {
+    margin: 0; padding:0; height: 100%; width: 100%;
+    overflow: hidden; font-family: 'Arial', sans-serif;
+    background: #111;
+  }
+  #viewerContainer {
+    width: 100%; height: 100%;
+    position: relative;
+    perspective: 1500px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center; align-items: center;
+  }
+  #pageWrapper {
+    position: relative;
+    width: 100%; height: 100%;
+  }
+  canvas {
+    display: block;
+    width: 100%; height: 100%;
+    margin: auto;
+    transition: transform 0.8s ease, opacity 0.8s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,0.3);
+    background: #222;
+  }
+  /* 애니메이션 클래스를 통해 슬라이드/페이드 효과 */
+  .slideIn {
+    animation: slideIn 0.8s forwards;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  /* 플로팅 메뉴와 설정 아이콘: 오른쪽 상단 위치 */
+  #floatingMenu {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+  }
+  .menu-btn {
+    background: rgba(255,255,255,0.2);
+    border: none; padding: 10px; border-radius: 50%;
+    cursor: pointer; font-size: 20px; color: #fff;
+    backdrop-filter: blur(4px);
+    transition: background 0.3s;
+  }
+  .menu-btn:hover {
+    background: rgba(255,255,255,0.4);
+  }
+  /* 페이지 표시와 안내 텍스트 고정 영역 */
+  #pageInfo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap; /* 너비 고정, 줄바꿈 없음 */
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+</head>
+<body>
+
+<!-- PDF 뷰어 영역 -->
+<div id="viewerContainer">
+  <div id="pageWrapper">
+    <canvas id="pdfCanvas"></canvas>
+  </div>
+</div>
+
+<!-- 플로팅 메뉴 -->
+<div id="floatingMenu">
+  <button class="menu-btn" id="btnFirst" title="처음 페이지">|&lt;</button>
+  <button class="menu-btn" id="btnPrev" title="이전 페이지">&lt;</button>
+  <button class="menu-btn" id="btnNext" title="다음 페이지">&gt;</button>
+  <button class="menu-btn" id="btnEnd" title="끝 페이지">&gt;|</button>
+  <button class="menu-btn" id="btnSinglePage" title="1쪽보기">1P</button>
+  <button class="menu-btn" id="btnTwoPage" title="2쪽보기">2P</button>
+  <button class="menu-btn" id="btnRotate" title="회전">↻</button>
+  <button class="menu-btn" id="btnReset" title="초기화">🔄</button>
+  <!-- 설정 아이콘 -->
+  <button class="menu-btn" id="btnSettings" title="설정" style="font-size:18px;">⚙️</button>
+</div>
+
+<!-- 페이지 정보 -->
+<div id="pageInfo">0 / 0</div>
+
+<!-- 비밀번호 Prompter (설정에서 호출) -->
+<div id="passPrompt" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+  <div style="background:#fff; padding:20px; border-radius:8px; width:300px; max-width:80%; text-align:center;">
+    <h3>비밀번호 입력</h3>
+    <input type="password" id="passwordInput" style="width:80%; padding:8px; font-size:16px;">
+    <div style="margin-top:10px;">
+      <button id="btnPasswordOk" style="padding:8px 16px;">확인</button>
+      <button id="btnPasswordCancel" style="padding:8px 16px;">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF URL 저장 -->
+<script>
+  // 기본값
+  let pdfUrl = '';
+  let pdfDoc = null;
+  let currentPage = 1;
+  let totalPage = 0;
+  let scale = 1.0;
+  let rotation = 0; // 회전 각도
+  let pagesPerView = 1; // 1 또는 2
+  const maxScale = 2.0;
+  const minScale = 0.5;
+  const scaleStep = 0.2;
+
+  // DOM 캐시
+  const canvas = document.getElementById('pdfCanvas');
+  const ctx = canvas.getContext('2d');
+  const pageInfo = document.getElementById('pageInfo');
+
+  // 버튼 엘리먼트
+  const btnFirst = document.getElementById('btnFirst');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const btnEnd = document.getElementById('btnEnd');
+  const btnSinglePage = document.getElementById('btnSinglePage');
+  const btnTwoPage = document.getElementById('btnTwoPage');
+  const btnRotate = document.getElementById('btnRotate');
+  const btnReset = document.getElementById('btnReset');
+  const btnSettings = document.getElementById('btnSettings');
+
+  // 애니메이션 효과 함수
+  function animateTransition(type = 'slide') {
+    // 슬라이드 또는 페이드 애니메이션
+    // 간단하게 페이드 인 효과
+    ctx.globalAlpha = 0;
+    const fadeIn = () => {
+      ctx.globalAlpha += 0.1;
+      if (ctx.globalAlpha >= 1) {
+        ctx.globalAlpha = 1;
+        cancelAnimationFrame(fadeInId);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = ctx.globalAlpha;
+        // 재귀 호출
+        fadeInId = requestAnimationFrame(fadeIn);
+      }
+    };
+    let fadeInId = requestAnimationFrame(fadeIn);
+  }
+
+  // PDF 렌더링
+  function renderPage(pageNum) {
+    pdfDoc.getPage(pageNum).then(page => {
+      const viewport = page.getViewport({ scale: scale, rotation: rotation });
+      // canvas 크기 조절
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      // 렌더링
+      const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+      page.render(renderContext).promise.then(() => {
+        // 애니메이션 적용
+        animateTransition('slide');
+        updatePageInfo();
+      });
+    });
+  }
+
+  function updatePageInfo() {
+    pageInfo.textContent = `${currentPage} / ${totalPage}`;
+  }
+
+  // 페이지 이동 함수
+function goPage(pageNum) {
+  if (pageNum < 1 || pageNum > totalPage) return;
+  currentPage = pageNum;
+  renderPage(currentPage);
+}
+
+// 페이지 전환
+btnFirst.onclick = () => goPage(1);
+btnPrev.onclick = () => goPage(currentPage - 1);
+btnNext.onclick = () => goPage(currentPage + 1);
+btnEnd.onclick = () => goPage(totalPage);
+btnSinglePage.onclick = () => {
+  pagesPerView = 1; // 1페이지 보기
+  // 해당하는 기능
+  // (이 코드에서는 1페이지만 보여줌, 또는 화면 패널을 비우는 식으로)
+  // 구현 등 생략
+};
+btnTwoPage.onclick = () => {
+  pagesPerView = 2; // 2페이지 보기
+  // 구현 필요
+};
+btnRotate.onclick = () => {
+  rotation = (rotation + 90) % 360;
+  renderPage(currentPage);
+};
+btnReset.onclick = () => {
+  // 초기화: 새 PDF 로드 또는 리셋
+  if(pdfUrl) loadPdf(pdfUrl);
+};
+
+// PDF 로드 함수
+function loadPdf(url) {
+  pdfUrl = url;
+  pdfjsLib.getDocument(url).promise.then(pdf => {
+    pdfDoc = pdf;
+    totalPage = pdf.numPages;
+    currentPage = 1;
+    renderPage(currentPage);
+  });
+}
+
+// 설정 아이콘 클릭 시
+document.getElementById('btnSettings').onclick = () => {
+  // 비밀번호 프로프트 띄우기
+  showPasswordPrompt();
+};
+
+// 비밀번호 입력창
+const passPrompt = document.getElementById('passPrompt');
+const passwordInput = document.getElementById('passwordInput');
+
+function showPasswordPrompt() {
+  passwordInput.value = '';
+  passPrompt.style.display = 'flex';
+}
+document.getElementById('btnPasswordOk').onclick = () => {
+  const pw = passwordInput.value;
+  if (pw === '1234') {
+    // 성공 -> 새 탭 또는 창 열기
+    window.open('setting.html', '_blank');
+  } else {
+    alert('비밀번호가 올바르지 않습니다.');
+  }
+  passPrompt.style.display = 'none';
+};
+document.getElementById('btnPasswordCancel').onclick = () => {
+  passPrompt.style.display = 'none';
+};
+
+// 전체 화면 터치 또는 클릭 네비게이션
+canvas.onclick = (e) => {
+  if(e.clientX > window.innerWidth/2) {
+    // 오른쪽 클릭 -> 다음 페이지
+    goPage(currentPage + 1);
+  } else {
+    // 왼쪽 클릭 -> 이전 페이지
+    goPage(currentPage - 1);
+  }
+};
+
+// 초기 PDF URL 불러오기 (설정에서 전달받거나 현제 상태에서 호출)
+window.onload = () => {
+  // 예제: 초기값 없을 시 아무거나
+  // loadPdf('sample.pdf');
+};
+
+</script>
+</body>
+</html>
