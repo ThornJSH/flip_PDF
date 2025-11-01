@@ -1,87 +1,574 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>설정 - PDF URL 입력</title>
-<style>
-  body {
-    margin:0; padding:0; height:100%; width:100%;
-    font-family:'Arial', sans-serif;
-    background:#f0f0f0;
-    display:flex; justify-content:center; align-items:center;
-  }
-  .container {
-    background:#fff;
-    padding:20px;
-    border-radius:10px;
-    box-shadow:0 0 20px rgba(0,0,0,0.2);
-    width:90%; max-width:400px;
-  }
-  h2 { margin-top:0; }
-  input[type=text], input[type=password] {
-    width:100%; padding:10px; margin-top:10px; box-sizing:border-box; font-size:16px;
-  }
-  button {
-    padding:10px 20px; margin-top:10px; font-size:16px; cursor:pointer;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 플립북 설정</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1em;
+            color: #aaa;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            font-size: 0.95em;
+            color: #1a1a1a;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-family: 'Sora', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
+
+        .input-help {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .examples {
+            background: #f9f9f9;
+            border-left: 4px solid #7c3aed;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .examples-title {
+            font-size: 0.9em;
+            color: #7c3aed;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            font-size: 0.85em;
+            color: #555;
+            margin-bottom: 8px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .example-item::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #7c3aed;
+            font-weight: bold;
+        }
+
+        .example-item-label {
+            color: #7c3aed;
+            font-weight: 600;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .example-item-value {
+            color: #999;
+            word-break: break-all;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #1a1a1a;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-secondary:active {
+            background: #e0e0e0;
+        }
+
+        .status-message {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            display: none;
+        }
+
+        .status-success {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-error {
+            background: #fff0f0;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .recent-section {
+            margin-top: 25px;
+        }
+
+        .recent-title {
+            font-size: 0.95em;
+            color: #1a1a1a;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .recent-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recent-item:hover {
+            background: #f0f0f0;
+            border-color: #7c3aed;
+        }
+
+        .recent-item-text {
+            flex: 1;
+            font-size: 0.85em;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .recent-item-btn {
+            background: none;
+            border: none;
+            color: #7c3aed;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 4px 8px;
+            transition: all 0.3s;
+        }
+
+        .recent-item-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-title {
+            font-size: 0.9em;
+            color: #7c3aed;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .info-box-text {
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .card {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .section-title {
+                font-size: 1.1em;
+            }
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #7c3aed;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .copy-btn:hover {
+            color: #a855f7;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h2>PDF URL 설정</h2>
-  <div id="passwordSection">
-    <label>비밀번호 입력</label>
-    <input type="password" id="passInput" placeholder="비밀번호">
-    <button id="btnVerify">확인</button>
-  </div>
-  <div id="urlSection" style="display:none;">
-    <label>PDF URL 입력</label>
-    <input type="text" id="pdfUrlInput" placeholder="PDF URL 또는 경로">
-    <button id="btnSave">저장</button>
-  </div>
-</div>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ PDF 플립북 설정</h1>
+            <p>PDF 파일을 로드할 URL을 입력해주세요</p>
+        </div>
 
-<script>
-  // 비밀번호 검증
-const correctPassword = '1234';
+        <!-- PDF URL 입력 카드 -->
+        <div class="card">
+            <div class="section-title">📎 PDF URL 입력</div>
+            
+            <div class="info-box">
+                <div class="info-box-title">💡 팁</div>
+                <div class="info-box-text">
+                    아래 예시 중 하나의 형식으로 PDF URL을 입력하세요. 올바른 URL이면 자동으로 플립북에 로드됩니다.
+                </div>
+            </div>
 
-const passInput = document.getElementById('passInput');
-const btnVerify = document.getElementById('btnVerify');
+            <div class="input-group">
+                <label class="input-label">PDF 파일 URL</label>
+                <input type="text" id="pdfUrl" class="input-field" placeholder="https://example.com/document.pdf">
+                <div class="input-help">유효한 PDF URL을 입력해주세요</div>
+            </div>
 
-const urlSection = document.getElementById('urlSection');
-const passSection = document.getElementById('passwordSection');
+            <div class="examples">
+                <div class="examples-title">📝 URL 예시</div>
+                <div class="example-item">
+                    <span class="example-item-label">웹 URL:</span>
+                    <span class="example-item-value">"https://example.com/document.pdf"</span>
+                    <button class="copy-btn" onclick="copyToClipboard('https://example.com/document.pdf')">복사</button>
+                </div>
+                <div class="example-item">
+                    <span class="example-item-label">구글 드라이브:</span>
+                    <span class="example-item-value">"https://drive.google.com/uc?export=download&id=FILE_ID"</span>
+                    <button class="copy-btn" onclick="copyToClipboard('https://drive.google.com/uc?export=download&id=FILE_ID')">복사</button>
+                </div>
+                <div class="example-item">
+                    <span class="example-item-label">깃허브:</span>
+                    <span class="example-item-value">"https://raw.githubusercontent.com/깃허브ID/폴더명/main/파일명.pdf"</span>
+                    <button class="copy-btn" onclick="copyToClipboard('https://raw.githubusercontent.com/깃허브ID/폴더명/main/파일명.pdf')">복사</button>
+                </div>
+            </div>
 
-btnVerify.onclick = () => {
-  if (passInput.value === correctPassword) {
-    // 성공 -> URL 입력 영역 표시
-    passSection.style.display = 'none';
-    urlSection.style.display = 'block';
-  } else {
-    alert('비밀번호가 틀렸습니다.');
-  }
-};
+            <div id="statusMessage" class="status-message"></div>
 
-// 저장 버튼
-document.getElementById('btnSave').onclick = () => {
-  const urlVal = document.getElementById('pdfUrlInput').value.trim();
-  if (urlVal) {
-    // 저장 후
-    localStorage.setItem('pdfUrl', urlVal);
-    alert('설정이 저장되었습니다.');
-    // 이 페이지 닫기 또는, 열려있는 PDF 페이지에 URL 전달
-    // 종료 후 (적용하려면)
-  } else {
-    alert('URL을 입력하세요.');
-  }
-};
-// 페이지 로드시 저장된 주소 불러오기
-window.onload = () => {
-  const savedUrl = localStorage.getItem('pdfUrl');
-  if (savedUrl) {
-    document.getElementById('pdfUrlInput').value = savedUrl;
-  }
-};
-</script>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="savePdfUrl()">✓ 저장하고 이동</button>
+                <button class="btn btn-secondary" onclick="goBack()">← 돌아가기</button>
+            </div>
+        </div>
+
+        <!-- 최근 사용한 PDF 카드 -->
+        <div class="card">
+            <div class="section-title">⏱️ 최근 사용한 PDF</div>
+            <div id="recentContainer" style="display: none;">
+                <div class="recent-list" id="recentList"></div>
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="clearRecent()">
+                    🗑️ 최근 목록 삭제
+                </button>
+            </div>
+            <div id="noRecent" style="color: #999; font-size: 0.9em; text-align: center; padding: 20px;">
+                최근 사용한 PDF가 없습니다
+            </div>
+        </div>
+
+        <!-- 도움말 카드 -->
+        <div class="card">
+            <div class="section-title">❓ FAQ</div>
+            
+            <div style="space-y: 15px;">
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 6px;">구글 드라이브 URL 어떻게 얻어요?</div>
+                    <div style="font-size: 0.9em; color: #666; line-height: 1.6;">
+                        1. 구글 드라이브에서 PDF 우클릭<br>
+                        2. "공유" 클릭<br>
+                        3. 링크 복사<br>
+                        4. 위 예시 형식으로 FILE_ID 부분을 바꿔서 사용
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 6px;">깃허브 URL 어떻게 얻어요?</div>
+                    <div style="font-size: 0.9em; color: #666; line-height: 1.6;">
+                        1. 깃허브에 PDF 업로드<br>
+                        2. PDF 파일 우클릭<br>
+                        3. "Raw" 클릭하여 Raw URL 복사<br>
+                        4. 또는 raw.githubusercontent.com 형식의 URL 사용
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 6px;">로컬 PC의 PDF를 사용할 수 있나요?</div>
+                    <div style="font-size: 0.9em; color: #666; line-height: 1.6;">
+                        로컬 파일은 보안상 이유로 직접 사용할 수 없습니다. 대신 GitHub, Google Drive 등 클라우드 서비스에 먼저 업로드한 후 URL로 사용해주세요.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 저장된 URL 불러오기
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedUrl();
+            displayRecentPdfs();
+        });
+
+        function loadSavedUrl() {
+            const savedUrl = localStorage.getItem('pdfUrl');
+            if (savedUrl) {
+                document.getElementById('pdfUrl').value = savedUrl;
+            }
+        }
+
+        function savePdfUrl() {
+            const url = document.getElementById('pdfUrl').value.trim();
+            const statusMsg = document.getElementById('statusMessage');
+
+            if (!url) {
+                showStatus('URL을 입력해주세요', 'error');
+                return;
+            }
+
+            if (!isValidUrl(url)) {
+                showStatus('유효한 URL이 아닙니다', 'error');
+                return;
+            }
+
+            // LocalStorage에 저장
+            localStorage.setItem('pdfUrl', url);
+
+            // 최근 사용 목록에 추가
+            addToRecent(url);
+
+            showStatus('✓ URL이 저장되었습니다! 플립북으로 이동합니다...', 'success');
+
+            // 2초 후 플립북으로 이동
+            setTimeout(() => {
+                window.location.href = 'flipbook_PDF.html';
+            }, 1500);
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return string.toLowerCase().endsWith('.pdf');
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.textContent = message;
+            statusMsg.className = `status-message show status-${type}`;
+
+            if (type === 'error') {
+                setTimeout(() => {
+                    statusMsg.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        function addToRecent(url) {
+            let recent = JSON.parse(localStorage.getItem('recentPdfs') || '[]');
+            
+            // 중복 제거
+            recent = recent.filter(item => item !== url);
+            
+            // 최신 URL을 맨 앞에 추가
+            recent.unshift(url);
+            
+            // 최대 10개만 유지
+            if (recent.length > 10) {
+                recent = recent.slice(0, 10);
+            }
+
+            localStorage.setItem('recentPdfs', JSON.stringify(recent));
+        }
+
+        function displayRecentPdfs() {
+            const recent = JSON.parse(localStorage.getItem('recentPdfs') || '[]');
+            const container = document.getElementById('recentContainer');
+            const noRecent = document.getElementById('noRecent');
+            const recentList = document.getElementById('recentList');
+
+            if (recent.length === 0) {
+                container.style.display = 'none';
+                noRecent.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            noRecent.style.display = 'none';
+            recentList.innerHTML = '';
+
+            recent.forEach((url, index) => {
+                const item = document.createElement('div');
+                item.className = 'recent-item';
+                item.innerHTML = `
+                    <span class="recent-item-text">${truncateUrl(url)}</span>
+                    <button class="recent-item-btn" onclick="loadRecent('${url}')" title="로드">↗️</button>
+                `;
+                recentList.appendChild(item);
+            });
+        }
+
+        function truncateUrl(url) {
+            return url.length > 50 ? url.substring(0, 50) + '...' : url;
+        }
+
+        function loadRecent(url) {
+            document.getElementById('pdfUrl').value = url;
+            localStorage.setItem('pdfUrl', url);
+            showStatus('✓ URL이 로드되었습니다! 플립북으로 이동합니다...', 'success');
+            setTimeout(() => {
+                window.location.href = 'flipbook_PDF.html';
+            }, 1500);
+        }
+
+        function clearRecent() {
+            if (confirm('최근 사용한 PDF 목록을 삭제하시겠습니까?')) {
+                localStorage.removeItem('recentPdfs');
+                displayRecentPdfs();
+                showStatus('✓ 최근 목록이 삭제되었습니다', 'success');
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'flipbook_PDF.html';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✓ 복사되었습니다');
+            });
+        }
+    </script>
 </body>
 </html>
