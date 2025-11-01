@@ -263,83 +263,124 @@
             }
         }
 
-        /* 페이지 전환 애니메이션 - 향상된 3D 시네마틱 효과 */
+        /* 페이지 전환 애니메이션 - 현실적인 책 페이지 넘김 효과 */
         .canvas-container {
-            perspective: 2000px;
-            perspective-origin: center;
+            perspective: 1200px;
+            perspective-origin: center center;
         }
 
         .pages-wrapper {
             position: relative;
             transform-style: preserve-3d;
+            transform-origin: center center;
         }
 
-        /* 다음 페이지로 이동 (왼쪽에서 오른쪽으로 넘기기) */
+        /* 다음 페이지로 이동 (왼쪽에서 오른쪽으로 책장 넘기기) */
         .page-transition-slide-left {
-            animation: cinematic3DFlipNext 550ms cubic-bezier(0.4, 0, 0.2, 1);
+            animation: realisticBookFlipForward 700ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        /* 이전 페이지로 이동 (오른쪽에서 왼쪽으로 넘기기) */
+        /* 이전 페이지로 이동 (오른쪽에서 왼쪽으로 책장 넘기기) */
         .page-transition-slide-right {
-            animation: cinematic3DFlipPrev 550ms cubic-bezier(0.4, 0, 0.2, 1);
+            animation: realisticBookFlipBackward 700ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-        /* 다음 페이지 3D 플립 애니메이션 */
-        @keyframes cinematic3DFlipNext {
+        /* 다음 페이지 - 현실적인 책 넘김 애니메이션 (왼쪽 spine 기준으로 회전) */
+        @keyframes realisticBookFlipForward {
             0% {
-                opacity: 0;
-                transform: translateX(100px) rotateY(-45deg) scale(0.85);
-                filter: brightness(0.7) blur(2px);
+                opacity: 0.3;
+                transform: rotateY(-90deg) translateZ(-50px) scale(0.9);
+                transform-origin: left center;
+                filter: brightness(0.6);
             }
-            30% {
+            20% {
                 opacity: 0.5;
-                transform: translateX(40px) rotateY(-20deg) scale(0.92);
-                filter: brightness(0.85) blur(1px);
+                transform: rotateY(-70deg) translateZ(-30px) scale(0.94);
+                transform-origin: left center;
+                filter: brightness(0.75);
             }
-            70% {
+            50% {
+                opacity: 0.8;
+                transform: rotateY(-35deg) translateZ(-10px) scale(0.98);
+                transform-origin: left center;
+                filter: brightness(0.9);
+            }
+            75% {
                 opacity: 0.95;
-                transform: translateX(-10px) rotateY(5deg) scale(1.02);
-                filter: brightness(1.05) blur(0);
+                transform: rotateY(-10deg) translateZ(0px) scale(1.01);
+                transform-origin: center center;
+                filter: brightness(1.05);
             }
             100% {
                 opacity: 1;
-                transform: translateX(0) rotateY(0deg) scale(1);
-                filter: brightness(1) blur(0);
+                transform: rotateY(0deg) translateZ(0px) scale(1);
+                transform-origin: center center;
+                filter: brightness(1);
             }
         }
 
-        /* 이전 페이지 3D 플립 애니메이션 */
-        @keyframes cinematic3DFlipPrev {
+        /* 이전 페이지 - 현실적인 책 넘김 애니메이션 (오른쪽 spine 기준으로 회전) */
+        @keyframes realisticBookFlipBackward {
             0% {
-                opacity: 0;
-                transform: translateX(-100px) rotateY(45deg) scale(0.85);
-                filter: brightness(0.7) blur(2px);
+                opacity: 0.3;
+                transform: rotateY(90deg) translateZ(-50px) scale(0.9);
+                transform-origin: right center;
+                filter: brightness(0.6);
             }
-            30% {
+            20% {
                 opacity: 0.5;
-                transform: translateX(-40px) rotateY(20deg) scale(0.92);
-                filter: brightness(0.85) blur(1px);
+                transform: rotateY(70deg) translateZ(-30px) scale(0.94);
+                transform-origin: right center;
+                filter: brightness(0.75);
             }
-            70% {
+            50% {
+                opacity: 0.8;
+                transform: rotateY(35deg) translateZ(-10px) scale(0.98);
+                transform-origin: right center;
+                filter: brightness(0.9);
+            }
+            75% {
                 opacity: 0.95;
-                transform: translateX(10px) rotateY(-5deg) scale(1.02);
-                filter: brightness(1.05) blur(0);
+                transform: rotateY(10deg) translateZ(0px) scale(1.01);
+                transform-origin: center center;
+                filter: brightness(1.05);
             }
             100% {
                 opacity: 1;
-                transform: translateX(0) rotateY(0deg) scale(1);
-                filter: brightness(1) blur(0);
+                transform: rotateY(0deg) translateZ(0px) scale(1);
+                transform-origin: center center;
+                filter: brightness(1);
             }
         }
 
-        /* 페이지 전환 중 그림자 효과 강화 */
+        /* 페이지 전환 중 강화된 그림자와 깊이 효과 */
         canvas {
-            transition: box-shadow 0.3s ease;
+            transition: box-shadow 0.35s ease, transform 0.1s ease;
         }
 
         .page-transition-slide-left canvas,
         .page-transition-slide-right canvas {
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 
+                0 30px 80px rgba(0,0,0,0.5),
+                0 15px 40px rgba(0,0,0,0.35),
+                0 5px 15px rgba(0,0,0,0.25),
+                inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 페이지에 약간의 두께감 표현 */
+        .pages-wrapper canvas {
+            position: relative;
+        }
+
+        .pages-wrapper canvas::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -2px;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.05));
+            pointer-events: none;
         }
 
         /* 좌우 클릭 영역 표시 */
@@ -643,7 +684,7 @@
             setTimeout(() => {
                 elements.pagesWrapper.classList.remove('page-transition-slide-left', 'page-transition-slide-right');
                 state.isTransitioning = false;
-            }, 550);
+            }, 700);
         }
 
         /**
