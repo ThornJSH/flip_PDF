@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-    <title>PDF 플립북</title>
+    <title>이슈와 놀자 최종보고서</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
 
@@ -105,97 +105,10 @@
             text-decoration: underline;
         }
 
-        .settings-screen {
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-            padding: 30px;
-        }
-
-        .settings-screen.show {
-            display: flex;
-        }
-
-        .settings-container {
-            max-width: 500px;
-            width: 100%;
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-title {
-            font-size: 1.8em;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 20px;
-        }
-
-        .settings-group {
-            margin-bottom: 20px;
-        }
-
-        .settings-label {
-            font-size: 0.95em;
-            color: #1a1a1a;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .settings-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-family: 'Sora', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .settings-input:focus {
-            outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
-        }
-
-        .settings-btn {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
-            width: 100%;
-        }
-
-        .settings-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
-        }
-
-        .settings-btn:active {
-            transform: translateY(0);
-        }
-
-        .settings-error {
-            background: #fff0f0;
-            color: #d32f2f;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 1px solid #ffcdd2;
-            font-size: 0.9em;
-        }
+        /* ============================================
+           수정: 불필요한 설정 화면 CSS 제거됨
+           (기존의 .settings-screen, .settings-container 등 제거)
+           ============================================ */
 
         .viewer-screen {
             display: none;
@@ -396,18 +309,10 @@
             </div>
         </div>
 
-        <!-- 설정 화면 -->
-        <div class="settings-screen" id="settingsScreen">
-            <div class="settings-container">
-                <h2 class="settings-title">PDF URL 설정</h2>
-                <div class="settings-group">
-                    <label class="settings-label">PDF 파일 URL</label>
-                    <input type="text" id="pdfUrl" class="settings-input" placeholder="https://example.com/file.pdf" value="https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/이슈와 놀자 최종 보고서.pdf">
-                </div>
-                <button class="settings-btn" onclick="loadPDFFromUrl()">로드</button>
-                <div id="settingsError"></div>
-            </div>
-        </div>
+        <!-- ============================================
+             수정: 불필요한 설정 화면 HTML 제거됨
+             (기존의 <div class="settings-screen"> 전체 제거)
+             ============================================ -->
 
         <!-- 뷰어 화면 -->
         <div class="viewer-screen" id="viewerScreen">
@@ -441,43 +346,41 @@
         let pdfOrientation = 'portrait';
         let flipbookReady = false;
 
+        // ============================================
+        // 수정: PDF URL 지정 (하드코딩)
+        // 이 URL로 직접 PDF 로드됨
+        // ============================================
+        const PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/이슈와 놀자 최종 보고서.pdf';
+
         function detectDevice() {
             const ua = navigator.userAgent.toLowerCase();
             isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(ua);
         }
 
-        function showSettings() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('viewerScreen').classList.remove('show');
-            document.getElementById('settingsScreen').classList.add('show');
-        }
-
         function showLoading() {
-            document.getElementById('settingsScreen').classList.remove('show');
-            document.getElementById('viewerScreen').classList.remove('show');
             document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('viewerScreen').classList.remove('show');
         }
 
         function showViewer() {
             document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('settingsScreen').classList.remove('show');
             document.getElementById('viewerScreen').classList.add('show');
         }
 
-        async function loadPDFFromUrl() {
-            const url = document.getElementById('pdfUrl').value.trim();
-            const errorDiv = document.getElementById('settingsError');
-            errorDiv.innerHTML = '';
+        // ============================================
+        // 수정: 설정 화면 관련 함수 제거됨
+        // showSettings() 함수 삭제
+        // ============================================
 
-            if (!url) {
-                errorDiv.innerHTML = '<div class="settings-error">URL을 입력해주세요</div>';
-                return;
-            }
-
+        // ============================================
+        // 수정: URL 직접 로드 함수로 변경
+        // 기존 loadPDFFromStorage() → loadPDFDirect()
+        // ============================================
+        async function loadPDFDirect() {
             showLoading();
 
             try {
-                const response = await fetch(url);
+                const response = await fetch(PDF_URL);
                 if (!response.ok) {
                     throw new Error('PDF 파일을 로드할 수 없습니다');
                 }
@@ -490,8 +393,11 @@
                 await renderFlipbook();
             } catch (error) {
                 console.error('Error:', error);
-                errorDiv.innerHTML = `<div class="settings-error">${error.message}</div>`;
-                showSettings();
+                showLoading();
+                setTimeout(() => {
+                    alert('PDF 로드 실패: ' + error.message);
+                    location.reload();
+                }, 2000);
             }
         }
 
@@ -673,13 +579,15 @@
         // 초기화
         window.addEventListener('DOMContentLoaded', () => {
             detectDevice();
-            showSettings();
         });
 
-        // 자동 로드 - 페이지 로드 후 즉시 시작
+        // ============================================
+        // 수정: 페이지 로드 후 즉시 PDF 로드
+        // 기존 loadPDFFromStorage() → loadPDFDirect()
+        // ============================================
         window.addEventListener('load', () => {
             setTimeout(() => {
-                loadPDFFromUrl();
+                loadPDFDirect();
             }, 500);
         });
     </script>
