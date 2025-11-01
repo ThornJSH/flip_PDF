@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>설정 - PDF URL 입력</title>
+<style>
+  body {
+    margin:0; padding:0; height:100%; width:100%;
+    font-family:'Arial', sans-serif;
+    background:#f0f0f0;
+    display:flex; justify-content:center; align-items:center;
+  }
+  .container {
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 20px rgba(0,0,0,0.2);
+    width:90%; max-width:400px;
+  }
+  h2 { margin-top:0; }
+  input[type=text], input[type=password] {
+    width:100%; padding:10px; margin-top:10px; box-sizing:border-box; font-size:16px;
+  }
+  button {
+    padding:10px 20px; margin-top:10px; font-size:16px; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>PDF URL 설정</h2>
+  <div id="passwordSection">
+    <label>비밀번호 입력</label>
+    <input type="password" id="passInput" placeholder="비밀번호">
+    <button id="btnVerify">확인</button>
+  </div>
+  <div id="urlSection" style="display:none;">
+    <label>PDF URL 입력</label>
+    <input type="text" id="pdfUrlInput" placeholder="PDF URL 또는 경로">
+    <button id="btnSave">저장</button>
+  </div>
+</div>
+
+<script>
+  // 비밀번호 검증
+const correctPassword = '1234';
+
+const passInput = document.getElementById('passInput');
+const btnVerify = document.getElementById('btnVerify');
+
+const urlSection = document.getElementById('urlSection');
+const passSection = document.getElementById('passwordSection');
+
+btnVerify.onclick = () => {
+  if (passInput.value === correctPassword) {
+    // 성공 -> URL 입력 영역 표시
+    passSection.style.display = 'none';
+    urlSection.style.display = 'block';
+  } else {
+    alert('비밀번호가 틀렸습니다.');
+  }
+};
+
+// 저장 버튼
+document.getElementById('btnSave').onclick = () => {
+  const urlVal = document.getElementById('pdfUrlInput').value.trim();
+  if (urlVal) {
+    // 저장 후
+    localStorage.setItem('pdfUrl', urlVal);
+    alert('설정이 저장되었습니다.');
+    // 이 페이지 닫기 또는, 열려있는 PDF 페이지에 URL 전달
+    // 종료 후 (적용하려면)
+  } else {
+    alert('URL을 입력하세요.');
+  }
+};
+// 페이지 로드시 저장된 주소 불러오기
+window.onload = () => {
+  const savedUrl = localStorage.getItem('pdfUrl');
+  if (savedUrl) {
+    document.getElementById('pdfUrlInput').value = savedUrl;
+  }
+};
+</script>
+</body>
+</html>
