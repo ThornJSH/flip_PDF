@@ -278,6 +278,11 @@
             transform: scale(0.95);
         }
 
+        .menu-btn.active {
+            background: rgba(52, 152, 219, 0.2);
+            color: var(--accent-color);
+        }
+
         .menu-btn span {
             font-size: 12px;
             font-weight: 600;
@@ -417,18 +422,37 @@
         }
 
         /* 페이지 전환 애니메이션 */
-        .page-transition {
-            animation: pageFlip 0.4s ease-out;
+        .pages-wrapper {
+            position: relative;
         }
 
-        @keyframes pageFlip {
+        .page-transition-slide-left {
+            animation: slideFromRight 0.4s ease-in-out;
+        }
+
+        .page-transition-slide-right {
+            animation: slideFromLeft 0.4s ease-in-out;
+        }
+
+        @keyframes slideFromRight {
             0% {
-                opacity: 0.5;
-                transform: scale(0.95);
+                opacity: 0;
+                transform: translateX(100px);
             }
             100% {
                 opacity: 1;
-                transform: scale(1);
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideFromLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
 
@@ -456,6 +480,26 @@
 
         .canvas-container:hover .click-hint {
             opacity: 0.3;
+        }
+
+        /* 회전 힌트 애니메이션 */
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            10% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
         }
     </style>
 </head>
@@ -567,8 +611,12 @@
             currentPage: 1,
             totalPages: 0,
             viewMode: window.innerWidth >= 1024 ? 'double' : 'single', // 기본값: 데스크톱은 2쪽, 모바일은 1쪽
-            scale: 1.5,
-            rotation: 0
+            zoomLevels: [50, 75, 100, 125, 150, 175, 200],
+            currentZoomIndex: 2, // 100% 시작
+            scale: 1.0,
+            fitToHeight: true,
+            rotation: 0,
+            isTransitioning: false
         };
 
         // DOM 요소 참조
@@ -660,14 +708,35 @@
         /**
          * 현재 페이지(들) 렌더링
          */
-        async function renderPages() {
-            if (!state.pdfDoc) return;
+        async function renderPages(direction = 'none') {
+            if (!state.pdfDoc || state.isTransitioning) return;
 
+            state.isTransitioning = true;
             elements.pagesWrapper.innerHTML = '';
-            elements.pagesWrapper.classList.add('page-transition');
+            
+            // 슬라이드 애니메이션 적용
+            if (direction === 'next') {
+                elements.pagesWrapper.classList.add('page-transition-slide-left');
+            } else if (direction === 'prev') {
+                elements.pagesWrapper.classList.add('page-transition-slide-right');
+            }
 
             const pagesToRender = state.viewMode === 'double' ? 2 : 1;
             const startPage = state.currentPage;
+
+            // 첫 번째 페이지를 가져와서 fit-to-height 계산
+            const firstPage = await state.pdfDoc.getPage(startPage);
+            let calculatedScale = state.scale;
+
+            if (state.fitToHeight) {
+                const baseViewport = firstPage.getViewport({ scale: 1.0 });
+                const containerHeight = elements.canvasContainer.offsetHeight - 100; // 여백 고려
+                calculatedScale = containerHeight / baseViewport.height;
+                
+                // 줌 레벨 적용
+                const zoomMultiplier = state.zoomLevels[state.currentZoomIndex] / 100;
+                calculatedScale *= zoomMultiplier;
+            }
 
             for (let i = 0; i < pagesToRender; i++) {
                 const pageNum = startPage + i;
@@ -675,7 +744,7 @@
 
                 const page = await state.pdfDoc.getPage(pageNum);
                 const viewport = page.getViewport({ 
-                    scale: state.scale,
+                    scale: calculatedScale,
                     rotation: state.rotation 
                 });
 
@@ -693,8 +762,11 @@
             }
 
             updatePageIndicator();
+            updateViewModeButtons();
+            
             setTimeout(() => {
-                elements.pagesWrapper.classList.remove('page-transition');
+                elements.pagesWrapper.classList.remove('page-transition-slide-left', 'page-transition-slide-right');
+                state.isTransitioning = false;
             }, 400);
         }
 
@@ -714,29 +786,46 @@
         }
 
         /**
+         * 뷰 모드 버튼 활성 상태 업데이트
+         */
+        function updateViewModeButtons() {
+            if (state.viewMode === 'single') {
+                elements.singleViewBtn.classList.add('active');
+                elements.doubleViewBtn.classList.remove('active');
+            } else {
+                elements.singleViewBtn.classList.remove('active');
+                elements.doubleViewBtn.classList.add('active');
+            }
+        }
+
+        /**
          * 페이지 네비게이션 함수들
          */
         async function goToFirstPage() {
+            if (state.currentPage === 1) return;
             state.currentPage = 1;
-            await renderPages();
+            await renderPages('prev');
         }
 
         async function goToLastPage() {
             if (state.viewMode === 'double') {
-                state.currentPage = state.totalPages % 2 === 0 
+                const lastPageStart = state.totalPages % 2 === 0 
                     ? state.totalPages - 1 
                     : state.totalPages;
+                if (state.currentPage === lastPageStart) return;
+                state.currentPage = lastPageStart;
             } else {
+                if (state.currentPage === state.totalPages) return;
                 state.currentPage = state.totalPages;
             }
-            await renderPages();
+            await renderPages('next');
         }
 
         async function previousPage() {
             const step = state.viewMode === 'double' ? 2 : 1;
             if (state.currentPage > 1) {
                 state.currentPage = Math.max(1, state.currentPage - step);
-                await renderPages();
+                await renderPages('prev');
             }
         }
 
@@ -744,7 +833,7 @@
             const step = state.viewMode === 'double' ? 2 : 1;
             if (state.currentPage < state.totalPages) {
                 state.currentPage = Math.min(state.totalPages, state.currentPage + step);
-                await renderPages();
+                await renderPages('next');
             }
         }
 
@@ -761,31 +850,53 @@
                 state.currentPage--;
             }
             
-            await renderPages();
+            await renderPages('none');
         }
 
         /**
-         * 확대/축소
+         * 확대/축소 (50% ~ 200% 단계별)
          */
         async function zoomIn() {
-            if (state.scale < 3) {
-                state.scale += 0.2;
-                await renderPages();
+            if (state.currentZoomIndex < state.zoomLevels.length - 1) {
+                state.currentZoomIndex++;
+                await renderPages('none');
             }
         }
 
         async function zoomOut() {
-            if (state.scale > 0.5) {
-                state.scale -= 0.2;
-                await renderPages();
+            if (state.currentZoomIndex > 0) {
+                state.currentZoomIndex--;
+                await renderPages('none');
             }
         }
 
         /**
-         * 화면 회전 힌트
+         * 화면 회전 힌트 - 시각적 피드백
          */
         function showRotateHint() {
-            alert('모바일 기기의 경우 화면을 가로/세로로 회전하여 최적의 뷰를 경험하세요! 📱↔️');
+            const hint = document.createElement('div');
+            hint.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 30px 40px;
+                border-radius: 16px;
+                font-size: 18px;
+                font-weight: 600;
+                text-align: center;
+                z-index: 3000;
+                animation: fadeInOut 3s ease-in-out;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            `;
+            hint.innerHTML = '📱 기기를 회전하세요 🔄<br><br><span style="font-size: 14px; opacity: 0.8;">최적의 뷰를 위해 가로/세로 모드를 변경해보세요</span>';
+            document.body.appendChild(hint);
+            
+            setTimeout(() => {
+                hint.remove();
+            }, 3000);
         }
 
         /**
@@ -793,15 +904,25 @@
          */
         function resetToFileSelection() {
             if (confirm('현재 PDF를 닫고 파일 선택 화면으로 돌아가시겠습니까?')) {
+                // 모든 상태 초기화
                 state.pdfDoc = null;
                 state.currentPage = 1;
                 state.totalPages = 0;
-                state.scale = 1.5;
+                state.currentZoomIndex = 2; // 100%
+                state.scale = 1.0;
+                state.fitToHeight = true;
+                state.viewMode = window.innerWidth >= 1024 ? 'double' : 'single';
+                state.rotation = 0;
+                state.isTransitioning = false;
+                
+                // UI 초기화
                 elements.viewerScreen.classList.remove('active');
                 elements.fileSelectionScreen.style.display = 'flex';
                 elements.fileInput.value = '';
                 elements.urlInput.value = '';
                 elements.pagesWrapper.innerHTML = '';
+                elements.singleViewBtn.classList.remove('active');
+                elements.doubleViewBtn.classList.remove('active');
             }
         }
 
@@ -860,7 +981,7 @@
         elements.firstPageBtn.addEventListener('click', goToFirstPage);
         elements.prevPageBtn.addEventListener('click', previousPage);
         elements.nextPageBtn.addEventListener('click', nextPage);
-        elements.lastPageBtn.addEventListener('click', lastPage);
+        elements.lastPageBtn.addEventListener('click', goToLastPage);
         elements.singleViewBtn.addEventListener('click', () => setViewMode('single'));
         elements.doubleViewBtn.addEventListener('click', () => setViewMode('double'));
         elements.zoomInBtn.addEventListener('click', zoomIn);
