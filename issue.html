@@ -191,6 +191,9 @@
             pointer-events: none;
         }
 
+        /* ============================================
+           수정: 플로팅 메뉴 (데스크톱만 표시)
+           ============================================ */
         .floating-nav {
             position: fixed;
             top: 24px;
@@ -222,10 +225,6 @@
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(10px);
-            /* ============================================
-               수정: 터치 이벤트 개선
-               user-select 추가로 모바일 장시간 누르기 방지
-               ============================================ */
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -251,24 +250,80 @@
             transform: none;
         }
 
+        /* ============================================
+           수정: 모바일 플로팅 메뉴 (토글 방식)
+           화면 중앙 터치 시 나타남
+           ============================================ */
+        .mobile-floating-nav {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            gap: 20px;
+            z-index: 25;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-floating-nav.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .mobile-nav-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: all 0.3s;
+            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .mobile-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 0.95em;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            pointer-events: none;
+        }
+
         @media (max-width: 768px) {
+            /* ============================================
+               수정: 모바일에서 데스크톱 플로팅 메뉴 숨김
+               ============================================ */
             .floating-nav {
-                top: 16px;
-                gap: 12px;
-            }
-
-            .floating-nav.left {
-                left: 12px;
-            }
-
-            .floating-nav.right {
-                right: 12px;
-            }
-
-            .nav-btn {
-                width: 44px;
-                height: 44px;
-                font-size: 1.1em;
+                display: none !important;
             }
 
             .page-info {
@@ -293,6 +348,15 @@
                 font-size: 0.8em;
             }
         }
+
+        @media (min-width: 769px) {
+            /* ============================================
+               수정: 데스크톱에서 모바일 플로팅 메뉴 숨김
+               ============================================ */
+            .mobile-floating-nav {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -314,12 +378,11 @@
 
         <!-- 뷰어 화면 -->
         <div class="viewer-screen" id="viewerScreen">
+            <!-- ============================================
+                 수정: 데스크톱 플로팅 메뉴 (항상 표시)
+                 ============================================ -->
             <div class="floating-nav left">
-                <!-- ============================================
-                     수정: 아이콘 변경 (⏮ → ⏪)
-                     더 직관적인 "빨리감기 왼쪽" 아이콘 사용
-                     ============================================ -->
-                <button class="nav-btn" id="firstBtn" title="처음으로">⏪</button>
+                <button class="nav-btn" id="firstBtn" title="처음으로">⏮</button>
             </div>
             
             <div class="canvas" id="canvas">
@@ -327,11 +390,15 @@
             </div>
 
             <div class="floating-nav right">
-                <!-- ============================================
-                     수정: 아이콘 변경 (⏭ → ⏩)
-                     더 직관적인 "빨리감기 오른쪽" 아이콘 사용
-                     ============================================ -->
-                <button class="nav-btn" id="lastBtn" title="끝으로">⏩</button>
+                <button class="nav-btn" id="lastBtn" title="끝으로">⏭</button>
+            </div>
+
+            <!-- ============================================
+                 수정: 모바일 플로팅 메뉴 (중앙, 터치 시 나타남)
+                 ============================================ -->
+            <div class="mobile-floating-nav" id="mobileFloatingNav">
+                <button class="mobile-nav-btn" id="mobileFirstBtn" title="처음으로">⏮</button>
+                <button class="mobile-nav-btn" id="mobileLastBtn" title="끝으로">⏭</button>
             </div>
 
             <div class="touch-zone touch-zone-left" id="touchZoneLeft"></div>
@@ -353,7 +420,7 @@
         let flipbookReady = false;
 
         // ============================================
-        // 수정: PDF URL 지정 (하드코딩)
+        // 수정: PDF URL 지정
         // ============================================
         const PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/이슈와 놀자 최종 보고서.pdf';
 
@@ -480,25 +547,73 @@
             return { width, height, display };
         }
 
+        // ============================================
+        // 수정: 모바일 플로팅 메뉴 토글 기능
+        // 화면 중앙을 터치하면 메뉴 표시/숨김
+        // ============================================
+        let menuVisibleTimer = null;
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileFloatingNav');
+            menu.classList.add('show');
+
+            clearTimeout(menuVisibleTimer);
+            menuVisibleTimer = setTimeout(() => {
+                menu.classList.remove('show');
+            }, 3000); // 3초 후 자동 숨김
+        }
+
         function setupTouchZones() {
             const leftZone = document.getElementById('touchZoneLeft');
             const rightZone = document.getElementById('touchZoneRight');
+            const canvas = document.getElementById('canvas');
 
             leftZone.addEventListener('click', () => {
                 $('#flipbook').turn('previous');
+                // 모바일에서 터치 존 클릭 시에도 메뉴 표시
+                if (isMobileDevice) {
+                    toggleMobileMenu();
+                }
             });
 
             rightZone.addEventListener('click', () => {
                 $('#flipbook').turn('next');
+                // 모바일에서 터치 존 클릭 시에도 메뉴 표시
+                if (isMobileDevice) {
+                    toggleMobileMenu();
+                }
+            });
+
+            // ============================================
+            // 수정: 화면 중앙 터치 감지
+            // 중앙을 터치하면 메뉴 표시
+            // ============================================
+            canvas.addEventListener('click', (e) => {
+                if (!isMobileDevice) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                const distX = Math.abs(clickX - centerX);
+                const distY = Math.abs(clickY - centerY);
+
+                // 중앙 영역 (400x400 픽셀)을 터치했을 때만 메뉴 표시
+                if (distX < 200 && distY < 200) {
+                    toggleMobileMenu();
+                }
             });
 
             // 터치 스와이프 지원
             let touchStartX = 0;
-            document.getElementById('canvas').addEventListener('touchstart', (e) => {
+            canvas.addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
             });
 
-            document.getElementById('canvas').addEventListener('touchend', (e) => {
+            canvas.addEventListener('touchend', (e) => {
                 const touchEndX = e.changedTouches[0].clientX;
                 const diff = touchStartX - touchEndX;
 
@@ -521,8 +636,13 @@
             const current = $('#flipbook').turn('page');
             const total = $('#flipbook').turn('pages');
 
+            // 데스크톱 버튼
             document.getElementById('firstBtn').disabled = current === 1;
             document.getElementById('lastBtn').disabled = current === total;
+
+            // 모바일 버튼
+            document.getElementById('mobileFirstBtn').disabled = current === 1;
+            document.getElementById('mobileLastBtn').disabled = current === total;
         }
 
         function handleResize() {
@@ -540,10 +660,7 @@
         }
 
         // ============================================
-        // 수정: 버튼 이벤트 리스너 개선
-        // - stopPropagation() 추가 (이벤트 중복 방지)
-        // - flipbookReady 상태 확인 추가
-        // - 조건문으로 안정성 강화
+        // 수정: 데스크톱 버튼 이벤트
         // ============================================
         document.getElementById('firstBtn').addEventListener('click', (e) => {
             e.preventDefault();
@@ -559,6 +676,30 @@
             if (flipbookReady && $('#flipbook').turn('is')) {
                 const total = $('#flipbook').turn('pages');
                 $('#flipbook').turn('page', total);
+            }
+        }, false);
+
+        // ============================================
+        // 수정: 모바일 버튼 이벤트
+        // ============================================
+        document.getElementById('mobileFirstBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (flipbookReady && $('#flipbook').turn('is')) {
+                $('#flipbook').turn('page', 1);
+                // 클릭 후 메뉴 자동 숨김
+                document.getElementById('mobileFloatingNav').classList.remove('show');
+            }
+        }, false);
+
+        document.getElementById('mobileLastBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (flipbookReady && $('#flipbook').turn('is')) {
+                const total = $('#flipbook').turn('pages');
+                $('#flipbook').turn('page', total);
+                // 클릭 후 메뉴 자동 숨김
+                document.getElementById('mobileFloatingNav').classList.remove('show');
             }
         }, false);
 
@@ -599,9 +740,6 @@
             detectDevice();
         });
 
-        // ============================================
-        // 수정: 페이지 로드 후 즉시 PDF 로드
-        // ============================================
         window.addEventListener('load', () => {
             setTimeout(() => {
                 loadPDFDirect();
