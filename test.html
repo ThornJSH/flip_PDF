@@ -4,13 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>PDF 플립북</title>
-
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:#000;color:#fff;}
 .app{width:100%;height:100%;position:relative;}
-/* === 설정 화면 === */
+/* 설정 화면 */
 #settingsScreen{display:none;overflow-y:auto;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);color:#1a1a1a;min-height:100vh;}
 .container{max-width:800px;margin:0 auto;padding:30px 20px;}
 .header{text-align:center;margin-bottom:40px;}
@@ -37,7 +36,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Sora',sans-serif;b
 .status-error{background:#fff0f0;color:#d32f2f;border:1px solid #ffcdd2;}
 .recent-item{background:#f9f9f9;padding:12px;border-radius:6px;border:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .recent-item-btn{background:none;border:none;color:#7c3aed;font-size:1.2em;cursor:pointer;}
-/* === 로딩 화면 === */
+/* 로딩 화면 */
 #loadingScreen{display:none;flex-direction:column;justify-content:center;align-items:center;height:100%;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);}
 .loading-icon{font-size:5em;animation:bounce 2s infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-20px);}}
@@ -45,10 +44,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Sora',sans-serif;b
 .progress-container{width:300px;max-width:80%;background:#333;border-radius:12px;overflow:hidden;height:12px;margin-top:20px;}
 .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#6d28d9);transition:width 0.3s ease;}
 .progress-percent{margin-top:10px;font-size:1em;color:#aaa;}
-/* === 뷰어 === */
+/* 뷰어 화면 */
 #viewerScreen{display:none;width:100%;height:100%;background:#000;position:relative;}
 .canvas{width:100%;height:100%;display:flex;justify-content:center;align-items:center;}
-#flipbook{background:white;box-shadow:0 0 40px rgba(0,0,0,0.4);}
+#flipbook{background:white;box-shadow:0 0 40px rgba(0,0,0,0.4);overflow:hidden;}
 .page img{max-width:100%;max-height:100%;}
 .floating-nav{position:fixed;top:24px;display:flex;gap:16px;z-index:20;}
 .floating-nav.left{left:24px;} .floating-nav.right{right:24px;}
@@ -94,7 +93,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Sora',sans-serif;b
     <div class="progress-percent" id="progressPercent">0%</div>
   </div>
 
-  <!-- 뷰어 -->
+  <!-- 뷰어 화면 -->
   <div id="viewerScreen">
     <div class="floating-nav left"><button class="nav-btn" id="firstBtn">⏮</button></div>
     <div class="canvas"><div id="flipbook"></div></div>
@@ -109,108 +108,195 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Sora',sans-serif;b
 <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-let pdfDoc=null,isMobile=false,pdfOrientation='portrait',flipbookReady=false;
-const progressBar=document.getElementById('progressBar');
-const progressPercent=document.getElementById('progressPercent');
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let pdfDoc = null, isMobile = false, pdfOrientation = 'portrait', flipbookReady = false;
+const progressBar = document.getElementById('progressBar');
+const progressPercent = document.getElementById('progressPercent');
 
-function detectDevice(){isMobile=/android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/i.test(navigator.userAgent.toLowerCase());}
-function showSettings(){hideAll();document.getElementById('settingsScreen').style.display='block';displayRecent();}
-function showLoading(){hideAll();document.getElementById('loadingScreen').style.display='flex';}
-function showViewer(){hideAll();document.getElementById('viewerScreen').style.display='block';}
-function hideAll(){document.querySelectorAll('#settingsScreen,#loadingScreen,#viewerScreen').forEach(e=>e.style.display='none');}
+function detectDevice(){
+  isMobile = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+}
 
-// ✅ 기본 예시 PDF (깃허브 경로)
-const DEFAULT_PDF = "https://raw.githubusercontent.com/yourID/yourRepo/main/flip.pdf";
+function hideAll(){
+  document.querySelectorAll('#settingsScreen,#loadingScreen,#viewerScreen').forEach(e=>e.style.display='none');
+}
+
+function showSettings(){
+  hideAll();
+  document.getElementById('settingsScreen').style.display='block';
+  displayRecent();
+}
+
+function showLoading(){
+  hideAll();
+  document.getElementById('loadingScreen').style.display='flex';
+}
+
+function showViewer(){
+  hideAll();
+  document.getElementById('viewerScreen').style.display='block';
+}
+
+// 기본 예시 PDF URL (CORS 프록시 포함)
+const GITHUB_PDF = "https://raw.githubusercontent.com/yourID/yourRepo/main/flip.pdf";
+const DEFAULT_PDF = "https://api.allorigins.win/raw?url=" + encodeURIComponent(GITHUB_PDF);
 
 function startApp(){
-  const url = localStorage.getItem('pdfUrl');
-  if(!url){
-    // localStorage에 없으면 기본 PDF 로드
+  detectDevice();
+  const saved = localStorage.getItem('pdfUrl');
+  if (!saved) {
     loadPDF(DEFAULT_PDF);
-  }else{
-    loadPDF(url);
+  } else {
+    loadPDF(saved);
   }
 }
 
 async function loadPDF(url){
   showLoading();
-  try{
-    const res=await fetch(url);
-    if(!res.ok) throw new Error('PDF를 불러올 수 없습니다');
-    const ab=await res.arrayBuffer();
-    pdfDoc=await pdfjsLib.getDocument({data:ab}).promise;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const ab = await res.arrayBuffer();
+    pdfDoc = await pdfjsLib.getDocument({ data: ab }).promise;
     await analyzePDF();
     await renderProgressive();
-  }catch(e){
-    alert('로드 실패: '+e.message);
+  } catch (e) {
+    console.error('PDF load error:', e);
+    alert('PDF 로드 실패: ' + e.message);
     showSettings();
   }
 }
 
 async function analyzePDF(){
-  let landscape=0;
-  for(let i=1;i<=Math.min(3,pdfDoc.numPages);i++){
-    const p=await pdfDoc.getPage(i);const v=p.getViewport({scale:1});if(v.width>v.height)landscape++;
+  let landscapeCount = 0;
+  const count = Math.min(3, pdfDoc.numPages);
+  for (let i = 1; i <= count; i++){
+    const p = await pdfDoc.getPage(i);
+    const v = p.getViewport({ scale: 1 });
+    if (v.width > v.height) landscapeCount++;
   }
-  pdfOrientation=landscape>=2?'landscape':'portrait';
+  pdfOrientation = (landscapeCount >= 2 ? 'landscape' : 'portrait');
 }
 
 async function renderProgressive(){
-  const flipbook=document.getElementById('flipbook');
-  flipbook.innerHTML='';
-  const total=pdfDoc.numPages;
-  for(let i=1;i<=total;i++){
-    const p=await pdfDoc.getPage(i);
-    const v=p.getViewport({scale:2});
-    const c=document.createElement('canvas');c.width=v.width;c.height=v.height;
-    await p.render({canvasContext:c.getContext('2d'),viewport:v}).promise;
-    const blob=await new Promise(r=>c.toBlob(r,'image/png'));
-    const url=URL.createObjectURL(blob);
-    const div=document.createElement('div');div.className='page';div.innerHTML=`<img src="${url}">`;
+  const flipbook = document.getElementById('flipbook');
+  flipbook.innerHTML = '';
+  const total = pdfDoc.numPages;
+  for (let i = 1; i <= total; i++){
+    const p = await pdfDoc.getPage(i);
+    const v = p.getViewport({ scale: 2 });
+    const c = document.createElement('canvas');
+    c.width = v.width; c.height = v.height;
+    await p.render({ canvasContext: c.getContext('2d'), viewport: v }).promise;
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    const url = URL.createObjectURL(blob);
+    const div = document.createElement('div');
+    div.className = 'page';
+    div.innerHTML = `<img src="${url}" alt="Page ${i}">`;
     flipbook.appendChild(div);
-    updateProgress(i,total);
-    if(i===1)initFlipbook();
+    updateProgress(i, total);
+    if (i === 1) initFlipbook();
   }
-  showViewer();updatePage();
+  showViewer();
+  updatePage();
 }
 
-function updateProgress(i,t){const pct=Math.round(i/t*100);progressBar.style.width=pct+'%';progressPercent.textContent=pct+'%';}
+function updateProgress(i, total){
+  const pct = Math.round((i / total) * 100);
+  progressBar.style.width = pct + '%';
+  progressPercent.textContent = pct + '%';
+}
 
 function getOptimalSize(){
-  let w,h,disp;
-  if(isMobile){w=window.innerWidth;h=window.innerHeight;disp='single';}
-  else{disp=pdfOrientation==='landscape'?'single':'double';w=Math.min(window.innerWidth*0.95,1200);h=Math.min(window.innerHeight*0.98,900);}
-  return{width:w,height:h,display:disp};
+  let width, height, display;
+  if (isMobile){
+    width = window.innerWidth;
+    height = window.innerHeight;
+    display = 'single';
+  } else {
+    display = (pdfOrientation === 'landscape' ? 'single' : 'double');
+    width = Math.min(window.innerWidth * 0.95, 1200);
+    height = Math.min(window.innerHeight * 0.98, 900);
+  }
+  return { width, height, display };
 }
 
 function initFlipbook(){
-  if($('#flipbook').turn('is'))return;
-  const {width,height,display}=getOptimalSize();
-  $('#flipbook').turn({width,height,display,autoCenter:true,duration:isMobile?500:1000,elevation:30,gradients:true,when:{turned:updatePage}});
-  flipbookReady=true;
+  if ($('#flipbook').turn('is')) return;
+  const { width, height, display } = getOptimalSize();
+  $('#flipbook').turn({
+    width: width,
+    height: height,
+    display: display,
+    autoCenter: true,
+    duration: isMobile ? 500 : 1000,
+    elevation: 30,
+    gradients: true,
+    when: { turned: updatePage }
+  });
+  flipbookReady = true;
 }
-function updatePage(){if(!$('#flipbook').turn('is'))return;const c=$('#flipbook').turn('page');const t=$('#flipbook').turn('pages');document.getElementById('pageInfo').textContent=`${c} / ${t}`;}
+function updatePage(){
+  if (!$('#flipbook').turn('is')) return;
+  const current = $('#flipbook').turn('page');
+  const total = $('#flipbook').turn('pages');
+  document.getElementById('pageInfo').textContent = `${current} / ${total}`;
+  document.getElementById('firstBtn').disabled = (current === 1);
+  document.getElementById('lastBtn').disabled = (current === total);
+}
 
-document.getElementById('firstBtn').onclick=()=>$('#flipbook').turn('page',1);
-document.getElementById('lastBtn').onclick=()=>$('#flipbook').turn('page',$('#flipbook').turn('pages'));
+document.getElementById('firstBtn').onclick = () => $('#flipbook').turn('page', 1);
+document.getElementById('lastBtn').onclick = () => $('#flipbook').turn('page', $('#flipbook').turn('pages'));
 
-/* === 설정 기능 === */
 function savePdfUrl(){
-  const url=document.getElementById('pdfUrl').value.trim();
-  if(!url.endsWith('.pdf'))return showStatus('유효한 PDF URL을 입력하세요','error');
-  localStorage.setItem('pdfUrl',url);addRecent(url);
+  const url = document.getElementById('pdfUrl').value.trim();
+  if (!url || !url.toLowerCase().endsWith('.pdf')) {
+    return showStatus('유효한 PDF URL을 입력하세요','error');
+  }
+  localStorage.setItem('pdfUrl', url);
+  addRecent(url);
   showStatus('✓ 저장 완료! 로드 중...','success');
-  setTimeout(()=>loadPDF(url),800);
+  setTimeout(() => loadPDF(url), 800);
 }
-function showStatus(t,type){const m=document.getElementById('statusMessage');m.textContent=t;m.className=`status-message show status-${type}`;}
-function addRecent(url){let arr=JSON.parse(localStorage.getItem('recentPdfs')||'[]');arr=arr.filter(x=>x!==url);arr.unshift(url);if(arr.length>10)arr=arr.slice(0,10);localStorage.setItem('recentPdfs',JSON.stringify(arr));}
-function displayRecent(){const list=document.getElementById('recentList');list.innerHTML='';const arr=JSON.parse(localStorage.getItem('recentPdfs')||'[]');arr.forEach(u=>{const d=document.createElement('div');d.className='recent-item';d.innerHTML=`<span>${u}</span><button class='recent-item-btn' onclick="selectRecent('${u}')">↗️</button>`;list.appendChild(d);});}
-function selectRecent(u){localStorage.setItem('pdfUrl',u);showStatus('✓ 최근 PDF 로드 중...','success');setTimeout(()=>loadPDF(u),800);}
-function copyToClipboard(t){navigator.clipboard.writeText(t).then(()=>alert('복사되었습니다!'));}
+function showStatus(text, type){
+  const m = document.getElementById('statusMessage');
+  m.textContent = text;
+  m.className = `status-message show status-${type}`;
+}
+function addRecent(url){
+  let arr = JSON.parse(localStorage.getItem('recentPdfs') || '[]');
+  arr = arr.filter(x => x !== url);
+  arr.unshift(url);
+  if (arr.length > 10) arr = arr.slice(0,10);
+  localStorage.setItem('recentPdfs', JSON.stringify(arr));
+}
+function displayRecent(){
+  const list = document.getElementById('recentList');
+  list.innerHTML = '';
+  const arr = JSON.parse(localStorage.getItem('recentPdfs') || '[]');
+  arr.forEach(u => {
+    const d = document.createElement('div');
+    d.className = 'recent-item';
+    d.innerHTML = `<span>${u}</span><button class='recent-item-btn' onclick="selectRecent('${u}')">↗️</button>`;
+    list.appendChild(d);
+  });
+}
+function selectRecent(u){
+  localStorage.setItem('pdfUrl', u);
+  showStatus('✓ 최근 PDF 로드 중...','success');
+  setTimeout(() => loadPDF(u), 800);
+}
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(() => alert('복사되었습니다!'));
+}
 
-window.addEventListener('resize',()=>{if(flipbookReady){const {width,height}=getOptimalSize();$('#flipbook').turn('size',width,height);}});
-window.addEventListener('DOMContentLoaded',()=>{detectDevice();startApp();});
+window.addEventListener('resize', () => {
+  if (flipbookReady){
+    const { width, height } = getOptimalSize();
+    $('#flipbook').turn('size', width, height);
+  }
+});
+window.addEventListener('DOMContentLoaded', startApp);
 </script>
 </body>
 </html>
