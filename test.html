@@ -31,109 +31,18 @@
             height: 100%;
         }
 
-        .url-input-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 20px;
-        }
-
-        .url-input-screen.hidden {
-            display: none;
-        }
-
-        .url-input-container {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 16px;
-            max-width: 600px;
-            width: 100%;
-            backdrop-filter: blur(10px);
-        }
-
-        .url-input-title {
-            color: #fff;
-            font-size: 1.8em;
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        .url-input-subtitle {
-            color: #888;
-            font-size: 0.95em;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .url-input {
-            width: 100%;
-            padding: 14px 18px;
-            font-size: 1em;
-            border: 2px solid rgba(124, 58, 237, 0.3);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            margin-bottom: 20px;
-            font-family: 'Sora', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .url-input:focus {
-            outline: none;
-            border-color: #7c3aed;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .url-input::placeholder {
-            color: #666;
-        }
-
-        .load-btn {
-            width: 100%;
-            padding: 14px;
-            font-size: 1.1em;
-            font-weight: 600;
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Sora', sans-serif;
-        }
-
-        .load-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
-        }
-
-        .load-btn:active {
-            transform: translateY(0);
-        }
-
         .loading-screen {
-            display: none;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             width: 100%;
             height: 100%;
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        }
-
-        .loading-screen.show {
-            display: flex;
         }
 
         .loading-content {
             text-align: center;
-            max-width: 500px;
-            width: 90%;
         }
 
         .loading-icon {
@@ -154,42 +63,47 @@
             margin-bottom: 10px;
         }
 
-        .loading-subtext {
-            font-size: 1em;
-            color: #666;
-            margin-bottom: 30px;
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4) infinite;
         }
 
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* 프로그레스 바 스타일 */
         .progress-container {
-            width: 100%;
+            margin-top: 40px;
+            width: 300px;
+            height: 8px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            height: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 15px;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #7c3aed 100%);
-            background-size: 200% 100%;
-            border-radius: 20px;
+            background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+            width: 0%;
+            border-radius: 10px;
             transition: width 0.3s ease;
-            animation: shimmer 2s infinite;
-            box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
         }
 
         .progress-text {
+            margin-top: 15px;
             font-size: 0.95em;
-            color: #7c3aed;
+            color: #888;
             font-weight: 600;
-            margin-bottom: 5px;
+        }
+
+        .progress-percentage {
+            color: #a855f7;
+            font-weight: 700;
         }
 
         .loading-credit {
@@ -262,7 +176,6 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            position: relative;
         }
 
         .page img {
@@ -270,31 +183,6 @@
             max-height: 100%;
             object-fit: contain;
             pointer-events: none;
-        }
-
-        .page-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f5f5f5;
-            color: #999;
-            font-size: 1.2em;
-        }
-
-        .page-loader {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2em;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         .touch-zone {
@@ -458,6 +346,16 @@
                 font-size: 1.1em;
             }
 
+            .progress-container {
+                width: 250px;
+                margin-top: 30px;
+            }
+
+            .progress-text {
+                margin-top: 12px;
+                font-size: 0.9em;
+            }
+
             .loading-credit {
                 margin-top: 30px;
             }
@@ -465,46 +363,25 @@
             .loading-credit-text {
                 font-size: 0.8em;
             }
-
-            .url-input-container {
-                padding: 30px 20px;
-            }
-
-            .url-input-title {
-                font-size: 1.5em;
-            }
         }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- URL 입력 화면 -->
-        <div class="url-input-screen" id="urlInputScreen">
-            <div class="url-input-container">
-                <div class="url-input-title">📄 PDF 플립북</div>
-                <div class="url-input-subtitle">PDF URL을 입력하세요</div>
-                <input type="text" class="url-input" id="pdfUrlInput" placeholder="https://example.com/sample.pdf">
-                <button class="load-btn" onclick="loadPDFFromUrl()">PDF 로드</button>
-            </div>
-            <div class="loading-credit">
-                <div class="loading-credit-title">PDF Flipbook</div>
-                <div class="loading-credit-text">
-                    이 PDF flipbook은 Perplexity AI를 활용해<br>
-                    <a href="https://welfareact.net" class="loading-credit-link" target="_blank">https://welfareact.net</a>에서 제작하였습니다.
-                </div>
-            </div>
-        </div>
-
         <!-- 로딩 화면 -->
         <div class="loading-screen" id="loadingScreen">
             <div class="loading-content">
                 <div class="loading-icon">📄</div>
-                <div class="loading-text" id="loadingText">PDF 로딩 중</div>
-                <div class="loading-subtext" id="loadingSubtext">페이지 0/0 렌더링 중...</div>
+                <div class="loading-text loading">PDF 로딩 중</div>
+                
+                <!-- 프로그레스 바 추가 -->
                 <div class="progress-container">
-                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    <div class="progress-bar" id="progressBar"></div>
                 </div>
-                <div class="progress-text" id="progressText">0%</div>
+                <div class="progress-text">
+                    <span class="progress-percentage" id="progressPercentage">0</span>%
+                </div>
+                
                 <div class="loading-credit">
                     <div class="loading-credit-title">PDF Flipbook</div>
                     <div class="loading-credit-text">
@@ -534,7 +411,7 @@
             <div class="page-info" id="pageInfo">0/0</div>
 
             <!-- 설정 버튼 -->
-            <button class="settings-btn" id="settingsBtn" title="새 PDF 로드" onclick="goToSettings()">⚙️</button>
+            <button class="settings-btn" id="settingsBtn" title="설정" onclick="goToSettings()">⚙️</button>
         </div>
     </div>
 
@@ -545,66 +422,49 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        // 전역 변수
         let pdfDoc = null;
         let isMobileDevice = false;
         let pdfOrientation = 'portrait';
         let flipbookReady = false;
-        let renderedPages = {}; // 렌더링된 페이지 캐시 {pageNum: imageDataUrl}
-        let renderQueue = []; // 렌더링 대기 큐
-        let isRendering = false;
-        let totalPages = 0;
-        let renderedCount = 0;
 
-        // 디바이스 감지
         function detectDevice() {
             const ua = navigator.userAgent.toLowerCase();
             isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(ua);
         }
 
-        // 화면 전환
-        function showUrlInput() {
-            document.getElementById('urlInputScreen').classList.remove('hidden');
-            document.getElementById('loadingScreen').classList.remove('show');
-            document.getElementById('viewerScreen').classList.remove('show');
-        }
-
         function showLoading() {
-            document.getElementById('urlInputScreen').classList.add('hidden');
-            document.getElementById('loadingScreen').classList.add('show');
+            document.getElementById('loadingScreen').style.display = 'flex';
             document.getElementById('viewerScreen').classList.remove('show');
         }
 
         function showViewer() {
-            document.getElementById('urlInputScreen').classList.add('hidden');
-            document.getElementById('loadingScreen').classList.remove('show');
+            document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('viewerScreen').classList.add('show');
         }
 
-        // 진행률 업데이트
-        function updateProgress(current, total, message = '') {
+        // 프로그레스 업데이트 함수
+        function updateProgress(current, total) {
             const percentage = Math.round((current / total) * 100);
-            document.getElementById('progressBar').style.width = percentage + '%';
-            document.getElementById('progressText').textContent = percentage + '%';
-            document.getElementById('loadingSubtext').textContent = message || `페이지 ${current}/${total} 렌더링 중...`;
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            progressBar.style.width = percentage + '%';
+            progressPercentage.textContent = percentage;
         }
 
-        // PDF 로드 (URL 입력)
-        async function loadPDFFromUrl() {
-            const urlInput = document.getElementById('pdfUrlInput');
-            const pdfUrl = urlInput.value.trim();
-
-            if (!pdfUrl) {
-                alert('PDF URL을 입력해주세요.');
+        async function loadPDFFromStorage() {
+            const savedUrl = localStorage.getItem('pdfUrl');
+            
+            if (!savedUrl) {
+                // URL이 없으면 설정 페이지로 이동
+                window.location.href = 'setting.html';
                 return;
             }
 
             showLoading();
-            document.getElementById('loadingText').textContent = 'PDF 로딩 중';
-            updateProgress(0, 100, 'PDF 파일 다운로드 중...');
 
             try {
-                const response = await fetch(pdfUrl);
+                const response = await fetch(savedUrl);
                 if (!response.ok) {
                     throw new Error('PDF 파일을 로드할 수 없습니다');
                 }
@@ -612,173 +472,85 @@
                 const blob = await response.blob();
                 const arrayBuffer = await blob.arrayBuffer();
                 
+                // PDF 로드 진행률 추적
                 pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                totalPages = pdfDoc.numPages;
-                renderedCount = 0;
-                renderedPages = {};
                 
+                // 분석 진행률: 0-40%
+                updateProgress(0, 2);
                 await analyzePDF();
+                updateProgress(1, 2);
+                
+                // 렌더링 진행률: 40-100%
                 await renderFlipbook();
             } catch (error) {
                 console.error('Error:', error);
-                alert('PDF 로드 실패: ' + error.message);
-                showUrlInput();
+                showLoading();
+                setTimeout(() => {
+                    alert('PDF 로드 실패: ' + error.message + '\n\n설정 페이지로 이동합니다.');
+                    window.location.href = 'setting.html';
+                }, 2000);
             }
         }
 
-        // PDF 분석 (가로/세로 판별)
         async function analyzePDF() {
             const numPages = pdfDoc.numPages;
             let landscapeCount = 0;
 
-            updateProgress(0, numPages, 'PDF 분석 중...');
-
-            for (let i = 1; i <= Math.min(numPages, 10); i++) {
+            for (let i = 1; i <= numPages; i++) {
                 const page = await pdfDoc.getPage(i);
                 const vp = page.getViewport({ scale: 1 });
                 if (vp.width > vp.height) landscapeCount++;
             }
 
-            pdfOrientation = landscapeCount > 5 ? 'landscape' : 'portrait';
+            pdfOrientation = landscapeCount > numPages / 2 ? 'landscape' : 'portrait';
         }
 
-        // 개별 페이지 렌더링
-        async function renderPage(pageNum) {
-            if (renderedPages[pageNum]) {
-                return renderedPages[pageNum];
-            }
-
-            try {
-                const page = await pdfDoc.getPage(pageNum);
-                const scale = 2.0; // 고해상도 유지
-                const vp = page.getViewport({ scale });
-
-                const canvas = document.createElement('canvas');
-                canvas.width = vp.width;
-                canvas.height = vp.height;
-
-                await page.render({ 
-                    canvasContext: canvas.getContext('2d'), 
-                    viewport: vp 
-                }).promise;
-
-                const imageUrl = canvas.toDataURL('image/png');
-                renderedPages[pageNum] = imageUrl;
-                renderedCount++;
-                
-                return imageUrl;
-            } catch (error) {
-                console.error(`Error rendering page ${pageNum}:`, error);
-                return null;
-            }
-        }
-
-        // Flipbook 렌더링 (청크 기반)
         async function renderFlipbook() {
             const flipbook = document.getElementById('flipbook');
             flipbook.innerHTML = '';
 
             const numPages = pdfDoc.numPages;
-            const initialChunkSize = Math.min(5, numPages); // 첫 5페이지만 우선 렌더링
 
-            // 플레이스홀더 페이지 생성
             for (let i = 1; i <= numPages; i++) {
+                // 렌더링 진행률 업데이트 (40% ~ 100%)
+                const progressValue = 40 + ((i / numPages) * 60);
+                updateProgress(Math.round(progressValue), 100);
+
+                const page = await pdfDoc.getPage(i);
+                const vp = page.getViewport({ scale: 2 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = vp.width;
+                canvas.height = vp.height;
+
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+
                 const div = document.createElement('div');
                 div.className = 'page';
-                div.id = `page-${i}`;
-                div.innerHTML = '<div class="page-placeholder">로딩 중...</div>';
+                div.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Page ${i}">`;
                 flipbook.appendChild(div);
             }
 
-            // 초기 페이지 렌더링
-            document.getElementById('loadingText').textContent = '초기 페이지 렌더링 중';
-            for (let i = 1; i <= initialChunkSize; i++) {
-                updateProgress(i, numPages, `초기 페이지 ${i}/${initialChunkSize} 렌더링 중...`);
-                const imageUrl = await renderPage(i);
-                if (imageUrl) {
-                    const pageDiv = document.getElementById(`page-${i}`);
-                    pageDiv.innerHTML = `<img src="${imageUrl}" alt="Page ${i}">`;
-                }
-            }
-
-            // Flipbook 초기화
-            initFlipbook();
-
-            // 나머지 페이지 백그라운드 렌더링
-            renderRemainingPages(initialChunkSize + 1, numPages);
+            // 완료
+            updateProgress(100, 100);
+            
+            // 약간의 지연 후 뷰어 표시
+            setTimeout(() => {
+                initFlipbook();
+            }, 300);
         }
 
-        // 나머지 페이지 백그라운드 렌더링
-        async function renderRemainingPages(startPage, endPage) {
-            for (let i = startPage; i <= endPage; i++) {
-                updateProgress(renderedCount, totalPages, `백그라운드 렌더링 ${i}/${endPage}...`);
-                
-                const imageUrl = await renderPage(i);
-                if (imageUrl) {
-                    const pageDiv = document.getElementById(`page-${i}`);
-                    if (pageDiv) {
-                        pageDiv.innerHTML = `<img src="${imageUrl}" alt="Page ${i}">`;
-                    }
-                }
-
-                // UI 차단 방지를 위한 짧은 대기
-                if (i % 3 === 0) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
-                }
-            }
-
-            console.log('모든 페이지 렌더링 완료');
-        }
-
-        // 특정 페이지 우선 렌더링 (사용자가 이동할 때)
-        async function ensurePageRendered(pageNum) {
-            if (renderedPages[pageNum]) {
-                return;
-            }
-
-            const pageDiv = document.getElementById(`page-${pageNum}`);
-            if (pageDiv && !pageDiv.querySelector('img')) {
-                pageDiv.innerHTML = '<div class="page-placeholder"><div class="page-loader">⏳</div></div>';
-                
-                const imageUrl = await renderPage(pageNum);
-                if (imageUrl) {
-                    pageDiv.innerHTML = `<img src="${imageUrl}" alt="Page ${pageNum}">`;
-                }
-            }
-
-            // 다음/이전 페이지 프리페치
-            const display = $('#flipbook').turn('display');
-            if (display === 'double') {
-                ensurePageRendered(pageNum + 1);
-                ensurePageRendered(pageNum - 1);
-            }
-        }
-
-        // Flipbook 초기화
         function initFlipbook() {
             const { width, height, display } = getOptimalSize();
 
             $('#flipbook').turn({
-                width, 
-                height, 
-                display,
+                width, height, display,
                 autoCenter: true,
                 duration: isMobileDevice ? 500 : 1000,
                 pages: pdfDoc.numPages,
                 elevation: isMobileDevice ? 20 : 50,
                 gradients: true,
-                when: { 
-                    turned: function(event, page, view) {
-                        updatePage();
-                        ensurePageRendered(page);
-                        if (view && view.length > 1) {
-                            ensurePageRendered(page + 1);
-                        }
-                    },
-                    turning: function(event, page, view) {
-                        ensurePageRendered(page);
-                    }
-                }
+                when: { turned: updatePage }
             });
 
             flipbookReady = true;
@@ -788,7 +560,6 @@
             setupTouchZones();
         }
 
-        // 최적 크기 계산
         function getOptimalSize() {
             let width, height, display;
 
@@ -811,7 +582,6 @@
             return { width, height, display };
         }
 
-        // 터치 존 설정
         function setupTouchZones() {
             const leftZone = document.getElementById('touchZoneLeft');
             const rightZone = document.getElementById('touchZoneRight');
@@ -842,7 +612,6 @@
             });
         }
 
-        // 페이지 정보 업데이트
         function updatePage() {
             const current = $('#flipbook').turn('page');
             const total = $('#flipbook').turn('pages');
@@ -850,7 +619,6 @@
             updateNavButtons();
         }
 
-        // 네비게이션 버튼 업데이트
         function updateNavButtons() {
             const current = $('#flipbook').turn('page');
             const total = $('#flipbook').turn('pages');
@@ -859,7 +627,6 @@
             document.getElementById('lastBtn').disabled = current === total;
         }
 
-        // 리사이즈 핸들링
         function handleResize() {
             if (!flipbookReady || !$('#flipbook').turn('is')) return;
 
@@ -874,11 +641,8 @@
             }
         }
 
-        // 설정으로 이동
         function goToSettings() {
-            if (confirm('새로운 PDF를 로드하시겠습니까?')) {
-                location.reload();
-            }
+            window.location.href = 'setting.html';
         }
 
         // 이벤트 리스너
@@ -903,13 +667,6 @@
             }
         });
 
-        // Enter 키로 PDF 로드
-        document.getElementById('pdfUrlInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                loadPDFFromUrl();
-            }
-        });
-
         window.addEventListener('orientationchange', () => {
             setTimeout(handleResize, 100);
         });
@@ -927,7 +684,12 @@
         // 초기화
         window.addEventListener('DOMContentLoaded', () => {
             detectDevice();
-            showUrlInput();
+        });
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                loadPDFFromStorage();
+            }, 500);
         });
     </script>
 </body>
