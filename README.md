@@ -66,9 +66,9 @@ Font: Sora (Google Fonts)
 
 ```
 project/
-├── index.html          # 메인 뷰어 페이지 (이 파일)
+├── flipPDF_v2.html          # 메인 뷰어 페이지 (이 파일)
 ├── setting.html        # 설정 페이지 (PDF URL 입력)
-└── README.md           # 설명 문서 (이 파일)
+└── readme.md           # 설명 문서 (이 파일)
 ```
 
 ---
@@ -91,7 +91,7 @@ python3 -m http.server 8000
 3. URL은 자동으로 `localStorage`에 저장됨
 
 ### 3. **뷰어 사용**
-1. `index.html`로 이동
+1. `flipPDF_v2.html`로 이동
 2. PDF가 자동으로 로드됨
 3. 각 네비게이션 방법으로 페이지 이동
 
