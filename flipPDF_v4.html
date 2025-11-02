@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 3D Flip Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+        }
+
+        #loading-screen.hidden {
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .credits {
+            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+
+        /* Main Container */
+        #viewer-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Flip Book Container */
+        #flipbook {
+            position: relative;
+            perspective: 2000px;
+            width: 90%;
+            height: 85%;
+            max-width: 1400px;
+            max-height: 800px;
+        }
+
+        .page-container {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transform-origin: left center;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            backface-visibility: hidden;
+        }
+
+        .page-container.left {
+            left: 0;
+            transform-origin: right center;
+        }
+
+        .page-container.right {
+            right: 0;
+            transform-origin: left center;
+        }
+
+        .page-container.flipping-left {
+            transform: rotateY(-180deg);
+        }
+
+        .page-container.flipping-right {
+            transform: rotateY(180deg);
+        }
+
+        .page-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Navigation Buttons */
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .nav-button:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-button:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        #prev-btn {
+            left: 20px;
+        }
+
+        #next-btn {
+            right: 20px;
+        }
+
+        /* Settings Button */
+        #settings-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        #settings-btn:hover {
+            background: white;
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Page Info */
+        #page-info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        /* Progress Scrollbar (Mobile) */
+        #progress-scrollbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 100;
+        }
+
+        #progress-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        #progress-thumb {
+            position: absolute;
+            top: -4px;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            cursor: grab;
+        }
+
+        #progress-thumb:active {
+            cursor: grabbing;
+        }
+
+        /* Settings Modal */
+        #settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #settings-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .settings-section {
+            margin-bottom: 25px;
+        }
+
+        .settings-section h3 {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .setting-item {
+            margin-bottom: 15px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .setting-item input[type="text"],
+        .setting-item input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .setting-item input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #ddd;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #ccc;
+        }
+
+        .example-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .nav-button {
+                display: none;
+            }
+
+            #progress-scrollbar {
+                display: flex;
+            }
+
+            #flipbook {
+                width: 95%;
+                height: 80%;
+            }
+
+            #page-info {
+                bottom: 50px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+
+        /* Single Page Mode */
+        .single-page-mode #flipbook {
+            width: 60%;
+        }
+
+        .single-page-mode .page-container {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .single-page-mode #flipbook {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">PDF 로딩 중...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="credits">
+            <div>Perplexity AI 사용</div>
+            <div>welfareact.net에서 제작</div>
+            <div style="margin-top: 10px; font-size: 12px;">Turn.js © BSD License (Non-commercial)</div>
+        </div>
+    </div>
+
+    <!-- Main Viewer -->
+    <div id="viewer-container">
+        <div id="flipbook"></div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <button id="prev-btn" class="nav-button">‹</button>
+    <button id="next-btn" class="nav-button">›</button>
+
+    <!-- Settings Button -->
+    <button id="settings-btn">⚙</button>
+
+    <!-- Page Info -->
+    <div id="page-info">
+        <span id="current-page">1</span> / <span id="total-pages">0</span>
+    </div>
+
+    <!-- Progress Scrollbar (Mobile) -->
+    <div id="progress-scrollbar">
+        <div id="progress-track">
+            <div id="progress-thumb"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>설정</h2>
+                <button class="close-btn" id="close-modal">×</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>보기 설정</h3>
+                <div class="setting-item">
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="view-mode" value="double" checked>
+                            2쪽 보기
+                        </label>
+                        <label>
+                            <input type="radio" name="view-mode" value="single">
+                            1쪽 보기
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>페이지 이동</h3>
+                <div class="setting-item">
+                    <label>페이지 번호:</label>
+                    <input type="number" id="goto-page" min="1" placeholder="페이지 번호 입력">
+                    <button class="btn btn-primary" id="goto-btn" style="margin-top: 10px;">이동</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>PDF 불러오기</h3>
+                <div class="setting-item">
+                    <label>PDF URL:</label>
+                    <input type="text" id="pdf-url" placeholder="https://example.com/document.pdf">
+                    <div class="example-text">
+                        GitHub: https://raw.githubusercontent.com/[user]/[repo]/main/document.pdf<br>
+                        Google Drive: https://drive.google.com/uc?export=download&amp;id=[FILE_ID]
+                    </div>
+                    <button class="btn btn-primary" id="load-url-btn" style="margin-top: 10px;">URL에서 로드</button>
+                </div>
+                <div class="setting-item" style="margin-top: 20px;">
+                    <label>파일 업로드:</label>
+                    <input type="file" id="pdf-file" accept=".pdf">
+                </div>
+                <div class="setting-item" style="margin-top: 20px;">
+                    <button class="btn btn-secondary" id="load-default-btn">기본 PDF 로드 (flip.pdf)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <script>
+        // PDF.js worker configuration
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        // Application State
+        const state = {
+            pdfDoc: null,
+            currentPage: 1,
+            totalPages: 0,
+            viewMode: 'double',
+            renderedPages: {},
+            isMobile: window.innerWidth <= 768,
+            isFlipping: false,
+            touchStartX: 0,
+            touchStartY: 0
+        };
+
+        // DOM Elements
+        const elements = {
+            loadingScreen: document.getElementById('loading-screen'),
+            progressFill: document.getElementById('progress-fill'),
+            flipbook: document.getElementById('flipbook'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            settingsBtn: document.getElementById('settings-btn'),
+            currentPageSpan: document.getElementById('current-page'),
+            totalPagesSpan: document.getElementById('total-pages'),
+            settingsModal: document.getElementById('settings-modal'),
+            closeModal: document.getElementById('close-modal'),
+            progressThumb: document.getElementById('progress-thumb'),
+            progressTrack: document.getElementById('progress-track'),
+            viewModeRadios: document.querySelectorAll('input[name="view-mode"]'),
+            gotoPageInput: document.getElementById('goto-page'),
+            gotoBtn: document.getElementById('goto-btn'),
+            pdfUrlInput: document.getElementById('pdf-url'),
+            loadUrlBtn: document.getElementById('load-url-btn'),
+            pdfFileInput: document.getElementById('pdf-file'),
+            loadDefaultBtn: document.getElementById('load-default-btn')
+        };
+
+        // Initialize Application
+        async function init() {
+            await loadPDF('./flip.pdf');
+            setupEventListeners();
+        }
+
+        // Load PDF
+        async function loadPDF(source) {
+            try {
+                elements.loadingScreen.classList.remove('hidden');
+                elements.progressFill.style.width = '0%';
+
+                let loadingTask;
+                if (typeof source === 'string') {
+                    loadingTask = pdfjsLib.getDocument(source);
+                } else {
+                    loadingTask = pdfjsLib.getDocument({data: source});
+                }
+
+                loadingTask.onProgress = function(progress) {
+                    const percent = (progress.loaded / progress.total) * 100;
+                    elements.progressFill.style.width = percent + '%';
+                };
+
+                state.pdfDoc = await loadingTask.promise;
+                state.totalPages = state.pdfDoc.numPages;
+                state.currentPage = 1;
+                state.renderedPages = {};
+
+                elements.totalPagesSpan.textContent = state.totalPages;
+                elements.gotoPageInput.max = state.totalPages;
+
+                await renderCurrentPages();
+
+                setTimeout(() => {
+                    elements.loadingScreen.classList.add('hidden');
+                }, 500);
+            } catch (error) {
+                console.error('PDF 로딩 오류:', error);
+                alert('PDF를 로드할 수 없습니다. 파일 경로를 확인해주세요.');
+                elements.loadingScreen.classList.add('hidden');
+            }
+        }
+
+        // Render Current Pages
+        async function renderCurrentPages() {
+            elements.flipbook.innerHTML = '';
+
+            if (state.viewMode === 'single' || state.isMobile) {
+                document.body.classList.add('single-page-mode');
+                await renderPage(state.currentPage, 'single');
+            } else {
+                document.body.classList.remove('single-page-mode');
+                // Even pages on left, odd on right for book-like experience
+                if (state.currentPage === 1) {
+                    await renderPage(1, 'single');
+                } else {
+                    const leftPage = state.currentPage % 2 === 0 ? state.currentPage : state.currentPage - 1;
+                    const rightPage = leftPage + 1;
+                    if (leftPage <= state.totalPages) {
+                        await renderPage(leftPage, 'left');
+                    }
+                    if (rightPage <= state.totalPages) {
+                        await renderPage(rightPage, 'right');
+                    }
+                }
+            }
+
+            updatePageInfo();
+        }
+
+        // Render Single Page
+        async function renderPage(pageNum, position) {
+            if (pageNum < 1 || pageNum > state.totalPages) return;
+
+            if (!state.renderedPages[pageNum]) {
+                const page = await state.pdfDoc.getPage(pageNum);
+                const scale = 2;
+                const viewport = page.getViewport({ scale });
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                state.renderedPages[pageNum] = canvas.toDataURL();
+            }
+
+            const pageContainer = document.createElement('div');
+            pageContainer.className = `page-container ${position}`;
+            pageContainer.dataset.page = pageNum;
+
+            const img = document.createElement('img');
+            img.src = state.renderedPages[pageNum];
+            img.className = 'page-canvas';
+
+            pageContainer.appendChild(img);
+            elements.flipbook.appendChild(pageContainer);
+        }
+
+        // Navigate to Next Page
+        function nextPage() {
+            if (state.isFlipping) return;
+
+            const increment = (state.viewMode === 'double' && !state.isMobile) ? 2 : 1;
+            if (state.currentPage + increment <= state.totalPages) {
+                state.isFlipping = true;
+                state.currentPage += increment;
+                renderCurrentPages();
+                setTimeout(() => {
+                    state.isFlipping = false;
+                }, 800);
+            }
+        }
+
+        // Navigate to Previous Page
+        function prevPage() {
+            if (state.isFlipping) return;
+
+            const decrement = (state.viewMode === 'double' && !state.isMobile) ? 2 : 1;
+            if (state.currentPage - decrement >= 1) {
+                state.isFlipping = true;
+                state.currentPage -= decrement;
+                renderCurrentPages();
+                setTimeout(() => {
+                    state.isFlipping = false;
+                }, 800);
+            }
+        }
+
+        // Go to Specific Page
+        function gotoPage(pageNum) {
+            pageNum = parseInt(pageNum);
+            if (pageNum >= 1 && pageNum <= state.totalPages && pageNum !== state.currentPage) {
+                state.currentPage = pageNum;
+                renderCurrentPages();
+            }
+        }
+
+        // Update Page Info
+        function updatePageInfo() {
+            elements.currentPageSpan.textContent = state.currentPage;
+            
+            // Update progress thumb position
+            const progress = (state.currentPage - 1) / (state.totalPages - 1);
+            const thumbPosition = progress * (elements.progressTrack.offsetWidth - 16);
+            elements.progressThumb.style.left = thumbPosition + 'px';
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Navigation buttons
+            elements.prevBtn.addEventListener('click', prevPage);
+            elements.nextBtn.addEventListener('click', nextPage);
+
+            // Settings button
+            elements.settingsBtn.addEventListener('click', () => {
+                elements.settingsModal.classList.add('active');
+            });
+
+            // Close modal
+            elements.closeModal.addEventListener('click', () => {
+                elements.settingsModal.classList.remove('active');
+            });
+
+            elements.settingsModal.addEventListener('click', (e) => {
+                if (e.target === elements.settingsModal) {
+                    elements.settingsModal.classList.remove('active');
+                }
+            });
+
+            // View mode change
+            elements.viewModeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    state.viewMode = e.target.value;
+                    renderCurrentPages();
+                });
+            });
+
+            // Go to page
+            elements.gotoBtn.addEventListener('click', () => {
+                const pageNum = elements.gotoPageInput.value;
+                if (pageNum) {
+                    gotoPage(pageNum);
+                    elements.settingsModal.classList.remove('active');
+                }
+            });
+
+            elements.gotoPageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    elements.gotoBtn.click();
+                }
+            });
+
+            // Load PDF from URL
+            elements.loadUrlBtn.addEventListener('click', () => {
+                const url = elements.pdfUrlInput.value.trim();
+                if (url) {
+                    loadPDF(url);
+                    elements.settingsModal.classList.remove('active');
+                }
+            });
+
+            // Load PDF from file
+            elements.pdfFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        loadPDF(new Uint8Array(event.target.result));
+                        elements.settingsModal.classList.remove('active');
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+
+            // Load default PDF
+            elements.loadDefaultBtn.addEventListener('click', () => {
+                loadPDF('./flip.pdf');
+                elements.settingsModal.classList.remove('active');
+            });
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevPage();
+                } else if (e.key === 'ArrowRight') {
+                    nextPage();
+                }
+            });
+
+            // Touch events
+            elements.flipbook.addEventListener('touchstart', handleTouchStart, {passive: true});
+            elements.flipbook.addEventListener('touchmove', handleTouchMove, {passive: true});
+            elements.flipbook.addEventListener('touchend', handleTouchEnd, {passive: true});
+
+            // Click events for desktop
+            elements.flipbook.addEventListener('click', (e) => {
+                if (state.isMobile) return;
+                const rect = elements.flipbook.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                if (x < rect.width / 2) {
+                    prevPage();
+                } else {
+                    nextPage();
+                }
+            });
+
+            // Progress scrollbar drag
+            let isDragging = false;
+            elements.progressThumb.addEventListener('mousedown', () => {
+                isDragging = true;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const rect = elements.progressTrack.getBoundingClientRect();
+                    let x = e.clientX - rect.left;
+                    x = Math.max(0, Math.min(x, rect.width));
+                    const progress = x / rect.width;
+                    const pageNum = Math.round(progress * (state.totalPages - 1)) + 1;
+                    gotoPage(pageNum);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            elements.progressTrack.addEventListener('click', (e) => {
+                const rect = elements.progressTrack.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const progress = x / rect.width;
+                const pageNum = Math.round(progress * (state.totalPages - 1)) + 1;
+                gotoPage(pageNum);
+            });
+
+            // Window resize
+            window.addEventListener('resize', () => {
+                const wasMobile = state.isMobile;
+                state.isMobile = window.innerWidth <= 768;
+                if (wasMobile !== state.isMobile) {
+                    renderCurrentPages();
+                }
+            });
+        }
+
+        // Touch Event Handlers
+        function handleTouchStart(e) {
+            state.touchStartX = e.touches[0].clientX;
+            state.touchStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e) {
+            // Touch move handling if needed
+        }
+
+        function handleTouchEnd(e) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - state.touchStartX;
+            const deltaY = touchEndY - state.touchStartY;
+
+            // Check if horizontal swipe is dominant
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                if (deltaX > 0) {
+                    prevPage();
+                } else {
+                    nextPage();
+                }
+            }
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
