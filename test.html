@@ -6,27 +6,32 @@
     <title>PDF 플립북</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         html, body {
             width: 100%;
             height: 100%;
             overflow: hidden;
         }
+
         body {
             font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #000;
             color: #1a1a1a;
         }
+
         .app {
             display: flex;
             width: 100%;
             height: 100%;
         }
-        .loading-screen {
+
+        .url-input-screen {
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -34,60 +39,190 @@
             width: 100%;
             height: 100%;
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            padding: 20px;
         }
-        .loading-content {
+
+        .url-input-screen.hidden {
+            display: none;
+        }
+
+        .url-input-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .url-input-title {
+            color: #fff;
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 10px;
             text-align: center;
         }
+
+        .url-input-subtitle {
+            color: #888;
+            font-size: 0.95em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1em;
+            border: 2px solid rgba(124, 58, 237, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            margin-bottom: 20px;
+            font-family: 'Sora', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .url-input::placeholder {
+            color: #666;
+        }
+
+        .load-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1em;
+            font-weight: 600;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+        }
+
+        .load-btn:active {
+            transform: translateY(0);
+        }
+
+        .loading-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        }
+
+        .loading-screen.show {
+            display: flex;
+        }
+
+        .loading-content {
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
         .loading-icon {
             font-size: 5em;
             margin-bottom: 30px;
             animation: bounce 2s infinite;
         }
+
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
+
         .loading-text {
             font-size: 1.3em;
             color: #888;
             font-weight: 500;
             margin-bottom: 10px;
         }
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s steps(4) infinite;
+
+        .loading-subtext {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 30px;
         }
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%,100% { content: '...'; }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
         }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #7c3aed 100%);
+            background-size: 200% 100%;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .progress-text {
+            font-size: 0.95em;
+            color: #7c3aed;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
         .loading-credit {
             font-size: 0.9em;
             color: #666;
             margin-top: 40px;
             line-height: 1.8;
         }
+
         .loading-credit-title {
             font-size: 0.95em;
             color: #888;
             font-weight: 600;
             margin-bottom: 8px;
         }
+
         .loading-credit-text {
             color: #666;
             font-size: 0.85em;
         }
+
         .loading-credit-link {
             color: #7c3aed;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s;
         }
+
         .loading-credit-link:hover {
             color: #a855f7;
             text-decoration: underline;
         }
+
         .viewer-screen {
             display: none;
             width: 100%;
@@ -96,9 +231,11 @@
             position: relative;
             overflow: hidden;
         }
+
         .viewer-screen.show {
             display: flex;
         }
+
         .canvas {
             width: 100%;
             height: 100%;
@@ -109,6 +246,7 @@
             background: #000;
             position: relative;
         }
+
         #flipbook {
             background: white;
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
@@ -117,19 +255,48 @@
             max-width: 100%;
             max-height: 100%;
         }
+
         .page {
             background: white;
             display: flex !important;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            position: relative;
         }
+
         .page img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
             pointer-events: none;
         }
+
+        .page-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .page-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2em;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
         .touch-zone {
             position: absolute;
             height: 100%;
@@ -137,23 +304,27 @@
             cursor: pointer;
             z-index: 5;
         }
+
         .touch-zone-left {
             left: 0;
             width: 30%;
         }
+
         .touch-zone-right {
             right: 0;
             width: 30%;
         }
+
         .touch-zone:hover {
-            background: rgba(255,255,255,0.01);
+            background: rgba(255, 255, 255, 0.01);
         }
+
         .page-info {
             position: absolute;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             padding: 12px 24px;
             border-radius: 24px;
@@ -163,6 +334,7 @@
             z-index: 10;
             pointer-events: none;
         }
+
         .floating-nav {
             position: fixed;
             top: 24px;
@@ -170,12 +342,15 @@
             gap: 16px;
             z-index: 20;
         }
+
         .floating-nav.left {
             left: 24px;
         }
+
         .floating-nav.right {
             right: 24px;
         }
+
         .nav-btn {
             width: 48px;
             height: 48px;
@@ -192,21 +367,26 @@
             justify-content: center;
             backdrop-filter: blur(10px);
         }
+
         .nav-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
         }
+
         .nav-btn:active {
             transform: translateY(-1px);
         }
+
         .nav-btn:disabled {
             opacity: 0.4;
             cursor: not-allowed;
             box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
         }
+
         .nav-btn:disabled:hover {
             transform: none;
         }
+
         .settings-btn {
             position: fixed;
             bottom: 30px;
@@ -226,34 +406,42 @@
             justify-content: center;
             z-index: 20;
         }
+
         .settings-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
         }
+
         .settings-btn:active {
             transform: scale(1.05);
         }
+
         @media (max-width: 768px) {
             .floating-nav {
                 top: 16px;
                 gap: 12px;
             }
+
             .floating-nav.left {
                 left: 12px;
             }
+
             .floating-nav.right {
                 right: 12px;
             }
+
             .nav-btn {
                 width: 44px;
                 height: 44px;
                 font-size: 1.1em;
             }
+
             .page-info {
                 bottom: 20px;
                 padding: 10px 20px;
                 font-size: 0.85em;
             }
+
             .settings-btn {
                 bottom: 20px;
                 right: 20px;
@@ -261,28 +449,62 @@
                 height: 50px;
                 font-size: 1.2em;
             }
+
             .loading-icon {
                 font-size: 4em;
             }
+
             .loading-text {
                 font-size: 1.1em;
             }
+
             .loading-credit {
                 margin-top: 30px;
             }
+
             .loading-credit-text {
                 font-size: 0.8em;
+            }
+
+            .url-input-container {
+                padding: 30px 20px;
+            }
+
+            .url-input-title {
+                font-size: 1.5em;
             }
         }
     </style>
 </head>
 <body>
     <div class="app">
+        <!-- URL 입력 화면 -->
+        <div class="url-input-screen" id="urlInputScreen">
+            <div class="url-input-container">
+                <div class="url-input-title">📄 PDF 플립북</div>
+                <div class="url-input-subtitle">PDF URL을 입력하세요</div>
+                <input type="text" class="url-input" id="pdfUrlInput" placeholder="https://example.com/sample.pdf">
+                <button class="load-btn" onclick="loadPDFFromUrl()">PDF 로드</button>
+            </div>
+            <div class="loading-credit">
+                <div class="loading-credit-title">PDF Flipbook</div>
+                <div class="loading-credit-text">
+                    이 PDF flipbook은 Perplexity AI를 활용해<br>
+                    <a href="https://welfareact.net" class="loading-credit-link" target="_blank">https://welfareact.net</a>에서 제작하였습니다.
+                </div>
+            </div>
+        </div>
+
         <!-- 로딩 화면 -->
         <div class="loading-screen" id="loadingScreen">
             <div class="loading-content">
                 <div class="loading-icon">📄</div>
-                <div class="loading-text loading">PDF 로딩 중</div>
+                <div class="loading-text" id="loadingText">PDF 로딩 중</div>
+                <div class="loading-subtext" id="loadingSubtext">페이지 0/0 렌더링 중...</div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
                 <div class="loading-credit">
                     <div class="loading-credit-title">PDF Flipbook</div>
                     <div class="loading-credit-text">
@@ -298,16 +520,21 @@
             <div class="floating-nav left">
                 <button class="nav-btn" id="firstBtn" title="처음으로">⏮</button>
             </div>
+            
             <div class="canvas" id="canvas">
                 <div id="flipbook"></div>
             </div>
+
             <div class="floating-nav right">
                 <button class="nav-btn" id="lastBtn" title="끝으로">⏭</button>
             </div>
+
             <div class="touch-zone touch-zone-left" id="touchZoneLeft"></div>
             <div class="touch-zone touch-zone-right" id="touchZoneRight"></div>
             <div class="page-info" id="pageInfo">0/0</div>
-            <button class="settings-btn" id="settingsBtn" title="설정" onclick="goToSettings()">⚙️</button>
+
+            <!-- 설정 버튼 -->
+            <button class="settings-btn" id="settingsBtn" title="새 PDF 로드" onclick="goToSettings()">⚙️</button>
         </div>
     </div>
 
@@ -318,109 +545,240 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+        // 전역 변수
         let pdfDoc = null;
         let isMobileDevice = false;
         let pdfOrientation = 'portrait';
         let flipbookReady = false;
+        let renderedPages = {}; // 렌더링된 페이지 캐시 {pageNum: imageDataUrl}
+        let renderQueue = []; // 렌더링 대기 큐
+        let isRendering = false;
+        let totalPages = 0;
+        let renderedCount = 0;
 
+        // 디바이스 감지
         function detectDevice() {
             const ua = navigator.userAgent.toLowerCase();
             isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(ua);
         }
 
+        // 화면 전환
+        function showUrlInput() {
+            document.getElementById('urlInputScreen').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.remove('show');
+            document.getElementById('viewerScreen').classList.remove('show');
+        }
+
         function showLoading() {
-            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('urlInputScreen').classList.add('hidden');
+            document.getElementById('loadingScreen').classList.add('show');
             document.getElementById('viewerScreen').classList.remove('show');
         }
 
         function showViewer() {
-            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('urlInputScreen').classList.add('hidden');
+            document.getElementById('loadingScreen').classList.remove('show');
             document.getElementById('viewerScreen').classList.add('show');
         }
 
-        async function loadPDFFromStorage() {
-            const savedUrl = localStorage.getItem('pdfUrl');
+        // 진행률 업데이트
+        function updateProgress(current, total, message = '') {
+            const percentage = Math.round((current / total) * 100);
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = percentage + '%';
+            document.getElementById('loadingSubtext').textContent = message || `페이지 ${current}/${total} 렌더링 중...`;
+        }
 
-            if (!savedUrl) {
-                window.location.href = 'setting.html';
+        // PDF 로드 (URL 입력)
+        async function loadPDFFromUrl() {
+            const urlInput = document.getElementById('pdfUrlInput');
+            const pdfUrl = urlInput.value.trim();
+
+            if (!pdfUrl) {
+                alert('PDF URL을 입력해주세요.');
                 return;
             }
 
             showLoading();
+            document.getElementById('loadingText').textContent = 'PDF 로딩 중';
+            updateProgress(0, 100, 'PDF 파일 다운로드 중...');
 
             try {
-                const response = await fetch(savedUrl);
+                const response = await fetch(pdfUrl);
                 if (!response.ok) {
                     throw new Error('PDF 파일을 로드할 수 없습니다');
                 }
 
                 const blob = await response.blob();
                 const arrayBuffer = await blob.arrayBuffer();
-
+                
                 pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                totalPages = pdfDoc.numPages;
+                renderedCount = 0;
+                renderedPages = {};
+                
                 await analyzePDF();
                 await renderFlipbook();
             } catch (error) {
                 console.error('Error:', error);
-                showLoading();
-                setTimeout(() => {
-                    alert('PDF 로드 실패: ' + error.message + '\n\n설정 페이지로 이동합니다.');
-                    window.location.href = 'setting.html';
-                }, 2000);
+                alert('PDF 로드 실패: ' + error.message);
+                showUrlInput();
             }
         }
 
+        // PDF 분석 (가로/세로 판별)
         async function analyzePDF() {
             const numPages = pdfDoc.numPages;
             let landscapeCount = 0;
 
-            for (let i = 1; i <= numPages; i++) {
+            updateProgress(0, numPages, 'PDF 분석 중...');
+
+            for (let i = 1; i <= Math.min(numPages, 10); i++) {
                 const page = await pdfDoc.getPage(i);
                 const vp = page.getViewport({ scale: 1 });
                 if (vp.width > vp.height) landscapeCount++;
             }
 
-            pdfOrientation = (landscapeCount > numPages / 2 ? 'landscape' : 'portrait');
+            pdfOrientation = landscapeCount > 5 ? 'landscape' : 'portrait';
         }
 
-        async function renderFlipbook() {
-            const flipbook = document.getElementById('flipbook');
-            flipbook.innerHTML = '';
+        // 개별 페이지 렌더링
+        async function renderPage(pageNum) {
+            if (renderedPages[pageNum]) {
+                return renderedPages[pageNum];
+            }
 
-            const numPages = pdfDoc.numPages;
-
-            for (let i = 1; i <= numPages; i++) {
-                const page = await pdfDoc.getPage(i);
-                const vp = page.getViewport({ scale: 2 });
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const scale = 2.0; // 고해상도 유지
+                const vp = page.getViewport({ scale });
 
                 const canvas = document.createElement('canvas');
                 canvas.width = vp.width;
                 canvas.height = vp.height;
 
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                await page.render({ 
+                    canvasContext: canvas.getContext('2d'), 
+                    viewport: vp 
+                }).promise;
 
+                const imageUrl = canvas.toDataURL('image/png');
+                renderedPages[pageNum] = imageUrl;
+                renderedCount++;
+                
+                return imageUrl;
+            } catch (error) {
+                console.error(`Error rendering page ${pageNum}:`, error);
+                return null;
+            }
+        }
+
+        // Flipbook 렌더링 (청크 기반)
+        async function renderFlipbook() {
+            const flipbook = document.getElementById('flipbook');
+            flipbook.innerHTML = '';
+
+            const numPages = pdfDoc.numPages;
+            const initialChunkSize = Math.min(5, numPages); // 첫 5페이지만 우선 렌더링
+
+            // 플레이스홀더 페이지 생성
+            for (let i = 1; i <= numPages; i++) {
                 const div = document.createElement('div');
                 div.className = 'page';
-                div.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Page ${i}">`;
+                div.id = `page-${i}`;
+                div.innerHTML = '<div class="page-placeholder">로딩 중...</div>';
                 flipbook.appendChild(div);
             }
 
+            // 초기 페이지 렌더링
+            document.getElementById('loadingText').textContent = '초기 페이지 렌더링 중';
+            for (let i = 1; i <= initialChunkSize; i++) {
+                updateProgress(i, numPages, `초기 페이지 ${i}/${initialChunkSize} 렌더링 중...`);
+                const imageUrl = await renderPage(i);
+                if (imageUrl) {
+                    const pageDiv = document.getElementById(`page-${i}`);
+                    pageDiv.innerHTML = `<img src="${imageUrl}" alt="Page ${i}">`;
+                }
+            }
+
+            // Flipbook 초기화
             initFlipbook();
+
+            // 나머지 페이지 백그라운드 렌더링
+            renderRemainingPages(initialChunkSize + 1, numPages);
         }
 
+        // 나머지 페이지 백그라운드 렌더링
+        async function renderRemainingPages(startPage, endPage) {
+            for (let i = startPage; i <= endPage; i++) {
+                updateProgress(renderedCount, totalPages, `백그라운드 렌더링 ${i}/${endPage}...`);
+                
+                const imageUrl = await renderPage(i);
+                if (imageUrl) {
+                    const pageDiv = document.getElementById(`page-${i}`);
+                    if (pageDiv) {
+                        pageDiv.innerHTML = `<img src="${imageUrl}" alt="Page ${i}">`;
+                    }
+                }
+
+                // UI 차단 방지를 위한 짧은 대기
+                if (i % 3 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+
+            console.log('모든 페이지 렌더링 완료');
+        }
+
+        // 특정 페이지 우선 렌더링 (사용자가 이동할 때)
+        async function ensurePageRendered(pageNum) {
+            if (renderedPages[pageNum]) {
+                return;
+            }
+
+            const pageDiv = document.getElementById(`page-${pageNum}`);
+            if (pageDiv && !pageDiv.querySelector('img')) {
+                pageDiv.innerHTML = '<div class="page-placeholder"><div class="page-loader">⏳</div></div>';
+                
+                const imageUrl = await renderPage(pageNum);
+                if (imageUrl) {
+                    pageDiv.innerHTML = `<img src="${imageUrl}" alt="Page ${pageNum}">`;
+                }
+            }
+
+            // 다음/이전 페이지 프리페치
+            const display = $('#flipbook').turn('display');
+            if (display === 'double') {
+                ensurePageRendered(pageNum + 1);
+                ensurePageRendered(pageNum - 1);
+            }
+        }
+
+        // Flipbook 초기화
         function initFlipbook() {
             const { width, height, display } = getOptimalSize();
 
             $('#flipbook').turn({
-                width: width,
-                height: height,
-                display: display,
+                width, 
+                height, 
+                display,
                 autoCenter: true,
                 duration: isMobileDevice ? 500 : 1000,
                 pages: pdfDoc.numPages,
                 elevation: isMobileDevice ? 20 : 50,
                 gradients: true,
-                when: { turned: updatePage }
+                when: { 
+                    turned: function(event, page, view) {
+                        updatePage();
+                        ensurePageRendered(page);
+                        if (view && view.length > 1) {
+                            ensurePageRendered(page + 1);
+                        }
+                    },
+                    turning: function(event, page, view) {
+                        ensurePageRendered(page);
+                    }
+                }
             });
 
             flipbookReady = true;
@@ -430,6 +788,7 @@
             setupTouchZones();
         }
 
+        // 최적 크기 계산
         function getOptimalSize() {
             let width, height, display;
 
@@ -438,8 +797,8 @@
                 height = window.innerHeight;
                 display = 'single';
             } else {
-                display = (pdfOrientation === 'landscape' ? 'single' : 'double');
-
+                display = pdfOrientation === 'landscape' ? 'single' : 'double';
+                
                 if (pdfOrientation === 'landscape') {
                     width = Math.min(window.innerWidth * 0.98, 1500);
                     height = Math.min(window.innerHeight * 0.98, 800);
@@ -452,6 +811,7 @@
             return { width, height, display };
         }
 
+        // 터치 존 설정
         function setupTouchZones() {
             const leftZone = document.getElementById('touchZoneLeft');
             const rightZone = document.getElementById('touchZoneRight');
@@ -464,18 +824,25 @@
                 $('#flipbook').turn('next');
             });
 
+            // 터치 스와이프 지원
             let touchStartX = 0;
             document.getElementById('canvas').addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
             });
+
             document.getElementById('canvas').addEventListener('touchend', (e) => {
                 const touchEndX = e.changedTouches[0].clientX;
                 const diff = touchStartX - touchEndX;
-                if (diff > 50) { $('#flipbook').turn('next'); }
-                else if (diff < -50) { $('#flipbook').turn('previous'); }
+
+                if (diff > 50) {
+                    $('#flipbook').turn('next');
+                } else if (diff < -50) {
+                    $('#flipbook').turn('previous');
+                }
             });
         }
 
+        // 페이지 정보 업데이트
         function updatePage() {
             const current = $('#flipbook').turn('page');
             const total = $('#flipbook').turn('pages');
@@ -483,14 +850,16 @@
             updateNavButtons();
         }
 
+        // 네비게이션 버튼 업데이트
         function updateNavButtons() {
             const current = $('#flipbook').turn('page');
             const total = $('#flipbook').turn('pages');
 
-            document.getElementById('firstBtn').disabled = (current === 1);
-            document.getElementById('lastBtn').disabled = (current === total);
+            document.getElementById('firstBtn').disabled = current === 1;
+            document.getElementById('lastBtn').disabled = current === total;
         }
 
+        // 리사이즈 핸들링
         function handleResize() {
             if (!flipbookReady || !$('#flipbook').turn('is')) return;
 
@@ -505,17 +874,23 @@
             }
         }
 
+        // 설정으로 이동
         function goToSettings() {
-            window.location.href = 'setting.html';
+            if (confirm('새로운 PDF를 로드하시겠습니까?')) {
+                location.reload();
+            }
         }
 
+        // 이벤트 리스너
         document.getElementById('firstBtn').addEventListener('click', () => {
             $('#flipbook').turn('page', 1);
         });
+
         document.getElementById('lastBtn').addEventListener('click', () => {
             const total = $('#flipbook').turn('pages');
             $('#flipbook').turn('page', total);
         });
+
         document.addEventListener('keydown', (e) => {
             if (flipbookReady) {
                 if (e.key === 'ArrowLeft') $('#flipbook').turn('previous');
@@ -527,10 +902,20 @@
                 }
             }
         });
+
+        // Enter 키로 PDF 로드
+        document.getElementById('pdfUrlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadPDFFromUrl();
+            }
+        });
+
         window.addEventListener('orientationchange', () => {
             setTimeout(handleResize, 100);
         });
+
         window.addEventListener('resize', debounce(handleResize, 300));
+
         function debounce(func, delay) {
             let timer;
             return () => {
@@ -538,13 +923,11 @@
                 timer = setTimeout(func, delay);
             };
         }
+
+        // 초기화
         window.addEventListener('DOMContentLoaded', () => {
             detectDevice();
-        });
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                loadPDFFromStorage();
-            }, 500);
+            showUrlInput();
         });
     </script>
 </body>
