@@ -4,94 +4,104 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <title>PDF 플립북</title>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
-
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;overflow:hidden;}
-body{
-    font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    background:#000;
-    color:#1a1a1a;
-}
-.app{display:flex;width:100%;height:100%;}
-
-/* 로딩 화면 */
-.loading-screen{
-    display:flex;flex-direction:column;justify-content:center;align-items:center;
-    width:100%;height:100%;
-    background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);
-    color:#fff;
-}
-.loading-icon{font-size:5em;margin-bottom:30px;animation:bounce 2s infinite;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:#000;color:#fff;}
+.app{width:100%;height:100%;position:relative;}
+/* === 설정 화면 === */
+#settingsScreen{display:none;overflow-y:auto;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);color:#1a1a1a;min-height:100vh;}
+.container{max-width:800px;margin:0 auto;padding:30px 20px;}
+.header{text-align:center;margin-bottom:40px;}
+.header h1{font-size:2em;color:#fff;margin-bottom:10px;}
+.header p{color:#aaa;}
+.card{background:#fff;border-radius:16px;padding:30px;margin-bottom:25px;box-shadow:0 10px 40px rgba(0,0,0,0.3);}
+.section-title{font-size:1.3em;font-weight:700;color:#1a1a1a;margin-bottom:20px;}
+.input-group{margin-bottom:20px;}
+.input-label{display:block;font-weight:600;margin-bottom:8px;}
+.input-field{width:100%;padding:14px 16px;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95em;}
+.input-field:focus{border-color:#7c3aed;outline:none;box-shadow:0 0 0 4px rgba(124,58,237,0.1);}
+.examples{background:#f9f9f9;border-left:4px solid #7c3aed;padding:16px;border-radius:6px;margin-top:15px;}
+.examples-title{color:#7c3aed;font-weight:600;margin-bottom:10px;}
+.example-item{font-size:0.85em;color:#555;margin-bottom:8px;padding-left:16px;position:relative;}
+.example-item::before{content:'•';position:absolute;left:0;color:#7c3aed;}
+.copy-btn{background:none;border:none;color:#7c3aed;cursor:pointer;font-size:0.85em;font-weight:600;text-decoration:underline;}
+.button-group{display:flex;gap:12px;margin-top:30px;}
+.btn{flex:1;padding:14px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
+.btn-primary{background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:#fff;}
+.btn-secondary{background:#f0f0f0;color:#1a1a1a;}
+.status-message{margin-top:15px;padding:14px;border-radius:8px;display:none;}
+.status-message.show{display:block;}
+.status-success{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+.status-error{background:#fff0f0;color:#d32f2f;border:1px solid #ffcdd2;}
+.recent-item{background:#f9f9f9;padding:12px;border-radius:6px;border:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.recent-item-btn{background:none;border:none;color:#7c3aed;font-size:1.2em;cursor:pointer;}
+/* === 로딩 화면 === */
+#loadingScreen{display:none;flex-direction:column;justify-content:center;align-items:center;height:100%;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);}
+.loading-icon{font-size:5em;animation:bounce 2s infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-20px);}}
-.loading-text{font-size:1.3em;color:#aaa;font-weight:500;margin-bottom:20px;}
-.progress-container{width:300px;max-width:80%;background:#333;border-radius:12px;overflow:hidden;height:12px;margin-top:10px;}
+.loading-text{margin-top:20px;color:#aaa;font-weight:500;}
+.progress-container{width:300px;max-width:80%;background:#333;border-radius:12px;overflow:hidden;height:12px;margin-top:20px;}
 .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#6d28d9);transition:width 0.3s ease;}
-.progress-percent{margin-top:10px;font-size:1em;color:#aaa;font-weight:500;}
-.loading-credit{font-size:0.9em;color:#666;margin-top:40px;text-align:center;line-height:1.8;}
-.loading-credit-link{color:#7c3aed;text-decoration:none;font-weight:600;}
-.loading-credit-link:hover{text-decoration:underline;color:#a855f7;}
-
-/* 뷰어 */
-.viewer-screen{display:none;width:100%;height:100%;background:#000;position:relative;overflow:hidden;}
-.viewer-screen.show{display:flex;}
-.canvas{width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;background:#000;position:relative;}
-#flipbook{background:white;box-shadow:0 0 40px rgba(0,0,0,0.4);overflow:hidden;max-width:100%;max-height:100%;}
-.page{background:white;display:flex!important;justify-content:center;align-items:center;overflow:hidden;}
-.page img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none;}
-.touch-zone{position:absolute;height:100%;top:0;cursor:pointer;z-index:5;}
-.touch-zone-left{left:0;width:30%;}
-.touch-zone-right{right:0;width:30%;}
-.page-info{
-    position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
-    background:rgba(255,255,255,0.15);color:white;padding:12px 24px;border-radius:24px;
-    font-size:0.95em;font-weight:600;backdrop-filter:blur(10px);z-index:10;pointer-events:none;
-}
+.progress-percent{margin-top:10px;font-size:1em;color:#aaa;}
+/* === 뷰어 === */
+#viewerScreen{display:none;width:100%;height:100%;background:#000;position:relative;}
+.canvas{width:100%;height:100%;display:flex;justify-content:center;align-items:center;}
+#flipbook{background:white;box-shadow:0 0 40px rgba(0,0,0,0.4);}
+.page img{max-width:100%;max-height:100%;}
 .floating-nav{position:fixed;top:24px;display:flex;gap:16px;z-index:20;}
-.floating-nav.left{left:24px;}
-.floating-nav.right{right:24px;}
-.nav-btn{
-    width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);
-    color:white;border:none;cursor:pointer;font-size:1.3em;transition:all 0.3s;
-    box-shadow:0 8px 24px rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;
-}
-.nav-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(124,58,237,0.4);}
-.nav-btn:active{transform:translateY(-1px);}
-.nav-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.settings-btn{
-    position:fixed;bottom:30px;right:30px;width:56px;height:56px;border-radius:50%;
-    background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;
-    cursor:pointer;font-size:1.5em;transition:all 0.3s;box-shadow:0 8px 24px rgba(124,58,237,0.3);z-index:20;
-}
-.settings-btn:hover{transform:scale(1.1);}
-@media(max-width:768px){
-    .nav-btn{width:44px;height:44px;font-size:1.1em;}
-    .settings-btn{width:50px;height:50px;font-size:1.2em;}
-}
+.floating-nav.left{left:24px;} .floating-nav.right{right:24px;}
+.nav-btn{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;cursor:pointer;}
+.page-info{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.15);color:white;padding:10px 20px;border-radius:20px;}
+.settings-btn{position:fixed;bottom:30px;right:30px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;font-size:1.4em;cursor:pointer;}
 </style>
 </head>
 <body>
 <div class="app">
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-icon">📄</div>
-        <div class="loading-text">PDF 로딩 중...</div>
-        <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
-        <div class="progress-percent" id="progressPercent">0%</div>
-        <div class="loading-credit">
-            <div>PDF Flipbook powered by <a href="https://welfareact.net" target="_blank" class="loading-credit-link">welfareact.net</a></div>
+  <!-- 설정 화면 -->
+  <div id="settingsScreen">
+    <div class="container">
+      <div class="header"><h1>⚙️ PDF 플립북 설정</h1><p>PDF 파일을 로드할 URL을 입력해주세요</p></div>
+      <div class="card">
+        <div class="section-title">📎 PDF URL 입력</div>
+        <div class="input-group">
+          <label class="input-label">PDF 파일 URL</label>
+          <input type="text" id="pdfUrl" class="input-field" placeholder="https://example.com/document.pdf">
         </div>
+        <div class="examples">
+          <div class="examples-title">📝 URL 예시</div>
+          <div class="example-item">웹 URL: <span>https://example.com/document.pdf</span> <button class="copy-btn" onclick="copyToClipboard('https://example.com/document.pdf')">복사</button></div>
+          <div class="example-item">깃허브 Raw: <span>https://raw.githubusercontent.com/yourID/yourRepo/main/flip.pdf</span> <button class="copy-btn" onclick="copyToClipboard('https://raw.githubusercontent.com/yourID/yourRepo/main/flip.pdf')">복사</button></div>
+        </div>
+        <div id="statusMessage" class="status-message"></div>
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="savePdfUrl()">✓ 저장하고 보기</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">⏱️ 최근 사용한 PDF</div>
+        <div id="recentList"></div>
+      </div>
     </div>
+  </div>
 
-    <div class="viewer-screen" id="viewerScreen">
-        <div class="floating-nav left"><button class="nav-btn" id="firstBtn" title="처음으로">⏮</button></div>
-        <div class="canvas" id="canvas"><div id="flipbook"></div></div>
-        <div class="floating-nav right"><button class="nav-btn" id="lastBtn" title="끝으로">⏭</button></div>
-        <div class="touch-zone touch-zone-left" id="touchZoneLeft"></div>
-        <div class="touch-zone touch-zone-right" id="touchZoneRight"></div>
-        <div class="page-info" id="pageInfo">0 / 0</div>
-        <button class="settings-btn" onclick="goToSettings()">⚙️</button>
-    </div>
+  <!-- 로딩 화면 -->
+  <div id="loadingScreen">
+    <div class="loading-icon">📄</div>
+    <div class="loading-text">PDF 로딩 중...</div>
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-percent" id="progressPercent">0%</div>
+  </div>
+
+  <!-- 뷰어 -->
+  <div id="viewerScreen">
+    <div class="floating-nav left"><button class="nav-btn" id="firstBtn">⏮</button></div>
+    <div class="canvas"><div id="flipbook"></div></div>
+    <div class="floating-nav right"><button class="nav-btn" id="lastBtn">⏭</button></div>
+    <div class="page-info" id="pageInfo">0 / 0</div>
+    <button class="settings-btn" onclick="showSettings()">⚙️</button>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -104,38 +114,46 @@ let pdfDoc=null,isMobile=false,pdfOrientation='portrait',flipbookReady=false;
 const progressBar=document.getElementById('progressBar');
 const progressPercent=document.getElementById('progressPercent');
 
-function detectDevice(){
-  isMobile=/android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+function detectDevice(){isMobile=/android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/i.test(navigator.userAgent.toLowerCase());}
+function showSettings(){hideAll();document.getElementById('settingsScreen').style.display='block';displayRecent();}
+function showLoading(){hideAll();document.getElementById('loadingScreen').style.display='flex';}
+function showViewer(){hideAll();document.getElementById('viewerScreen').style.display='block';}
+function hideAll(){document.querySelectorAll('#settingsScreen,#loadingScreen,#viewerScreen').forEach(e=>e.style.display='none');}
+
+// ✅ 기본 예시 PDF (깃허브 경로)
+const DEFAULT_PDF = "https://raw.githubusercontent.com/yourID/yourRepo/main/flip.pdf";
+
+function startApp(){
+  const url = localStorage.getItem('pdfUrl');
+  if(!url){
+    // localStorage에 없으면 기본 PDF 로드
+    loadPDF(DEFAULT_PDF);
+  }else{
+    loadPDF(url);
+  }
 }
 
-function showLoading(){document.getElementById('loadingScreen').style.display='flex';}
-function showViewer(){document.getElementById('loadingScreen').style.display='none';document.getElementById('viewerScreen').classList.add('show');}
-
-async function loadPDFFromStorage(){
-  const url=localStorage.getItem('pdfUrl');
-  if(!url){window.location.href='setting.html';return;}
+async function loadPDF(url){
   showLoading();
   try{
     const res=await fetch(url);
-    if(!res.ok)throw new Error('PDF 파일을 불러올 수 없습니다');
+    if(!res.ok) throw new Error('PDF를 불러올 수 없습니다');
     const ab=await res.arrayBuffer();
     pdfDoc=await pdfjsLib.getDocument({data:ab}).promise;
     await analyzePDF();
     await renderProgressive();
-  }catch(err){
-    alert('PDF 로드 실패: '+err.message);
-    window.location.href='setting.html';
+  }catch(e){
+    alert('로드 실패: '+e.message);
+    showSettings();
   }
 }
 
 async function analyzePDF(){
-  let landscapeCount=0;
+  let landscape=0;
   for(let i=1;i<=Math.min(3,pdfDoc.numPages);i++){
-    const p=await pdfDoc.getPage(i);
-    const vp=p.getViewport({scale:1});
-    if(vp.width>vp.height)landscapeCount++;
+    const p=await pdfDoc.getPage(i);const v=p.getViewport({scale:1});if(v.width>v.height)landscape++;
   }
-  pdfOrientation=landscapeCount>=2?'landscape':'portrait';
+  pdfOrientation=landscape>=2?'landscape':'portrait';
 }
 
 async function renderProgressive(){
@@ -143,78 +161,56 @@ async function renderProgressive(){
   flipbook.innerHTML='';
   const total=pdfDoc.numPages;
   for(let i=1;i<=total;i++){
-    const page=await pdfDoc.getPage(i);
-    const vp=page.getViewport({scale:2}); // 고화질 유지
-    const c=document.createElement('canvas');
-    const ctx=c.getContext('2d');
-    c.width=vp.width;c.height=vp.height;
-    await page.render({canvasContext:ctx,viewport:vp}).promise;
-    const blob=await new Promise(res=>c.toBlob(res,'image/png'));
+    const p=await pdfDoc.getPage(i);
+    const v=p.getViewport({scale:2});
+    const c=document.createElement('canvas');c.width=v.width;c.height=v.height;
+    await p.render({canvasContext:c.getContext('2d'),viewport:v}).promise;
+    const blob=await new Promise(r=>c.toBlob(r,'image/png'));
     const url=URL.createObjectURL(blob);
-    const div=document.createElement('div');
-    div.className='page';
-    div.innerHTML=`<img src="${url}" alt="page ${i}">`;
+    const div=document.createElement('div');div.className='page';div.innerHTML=`<img src="${url}">`;
     flipbook.appendChild(div);
     updateProgress(i,total);
-    if(i===1) initFlipbook();
+    if(i===1)initFlipbook();
   }
-  showViewer();
-  updatePage();
+  showViewer();updatePage();
 }
 
-function updateProgress(cur,total){
-  const pct=Math.round((cur/total)*100);
-  progressBar.style.width=pct+'%';
-  progressPercent.textContent=pct+'%';
-}
+function updateProgress(i,t){const pct=Math.round(i/t*100);progressBar.style.width=pct+'%';progressPercent.textContent=pct+'%';}
 
 function getOptimalSize(){
   let w,h,disp;
   if(isMobile){w=window.innerWidth;h=window.innerHeight;disp='single';}
-  else{
-    disp=pdfOrientation==='landscape'?'single':'double';
-    if(pdfOrientation==='landscape'){w=Math.min(window.innerWidth*0.98,1500);h=Math.min(window.innerHeight*0.98,800);}
-    else{w=Math.min(window.innerWidth*0.95,1100);h=Math.min(window.innerHeight*0.98,900);}
-  }
+  else{disp=pdfOrientation==='landscape'?'single':'double';w=Math.min(window.innerWidth*0.95,1200);h=Math.min(window.innerHeight*0.98,900);}
   return{width:w,height:h,display:disp};
 }
 
 function initFlipbook(){
   if($('#flipbook').turn('is'))return;
   const {width,height,display}=getOptimalSize();
-  $('#flipbook').turn({
-    width,height,display,autoCenter:true,duration:isMobile?500:1000,elevation:30,gradients:true,
-    when:{turned:updatePage}
-  });
+  $('#flipbook').turn({width,height,display,autoCenter:true,duration:isMobile?500:1000,elevation:30,gradients:true,when:{turned:updatePage}});
   flipbookReady=true;
 }
-
-function updatePage(){
-  if(!$('#flipbook').turn('is'))return;
-  const c=$('#flipbook').turn('page');
-  const t=$('#flipbook').turn('pages');
-  document.getElementById('pageInfo').textContent=`${c} / ${t}`;
-  document.getElementById('firstBtn').disabled=c===1;
-  document.getElementById('lastBtn').disabled=c===t;
-}
+function updatePage(){if(!$('#flipbook').turn('is'))return;const c=$('#flipbook').turn('page');const t=$('#flipbook').turn('pages');document.getElementById('pageInfo').textContent=`${c} / ${t}`;}
 
 document.getElementById('firstBtn').onclick=()=>$('#flipbook').turn('page',1);
 document.getElementById('lastBtn').onclick=()=>$('#flipbook').turn('page',$('#flipbook').turn('pages'));
-document.getElementById('touchZoneLeft').onclick=()=>$('#flipbook').turn('previous');
-document.getElementById('touchZoneRight').onclick=()=>$('#flipbook').turn('next');
 
-function goToSettings(){window.location.href='setting.html';}
+/* === 설정 기능 === */
+function savePdfUrl(){
+  const url=document.getElementById('pdfUrl').value.trim();
+  if(!url.endsWith('.pdf'))return showStatus('유효한 PDF URL을 입력하세요','error');
+  localStorage.setItem('pdfUrl',url);addRecent(url);
+  showStatus('✓ 저장 완료! 로드 중...','success');
+  setTimeout(()=>loadPDF(url),800);
+}
+function showStatus(t,type){const m=document.getElementById('statusMessage');m.textContent=t;m.className=`status-message show status-${type}`;}
+function addRecent(url){let arr=JSON.parse(localStorage.getItem('recentPdfs')||'[]');arr=arr.filter(x=>x!==url);arr.unshift(url);if(arr.length>10)arr=arr.slice(0,10);localStorage.setItem('recentPdfs',JSON.stringify(arr));}
+function displayRecent(){const list=document.getElementById('recentList');list.innerHTML='';const arr=JSON.parse(localStorage.getItem('recentPdfs')||'[]');arr.forEach(u=>{const d=document.createElement('div');d.className='recent-item';d.innerHTML=`<span>${u}</span><button class='recent-item-btn' onclick="selectRecent('${u}')">↗️</button>`;list.appendChild(d);});}
+function selectRecent(u){localStorage.setItem('pdfUrl',u);showStatus('✓ 최근 PDF 로드 중...','success');setTimeout(()=>loadPDF(u),800);}
+function copyToClipboard(t){navigator.clipboard.writeText(t).then(()=>alert('복사되었습니다!'));}
+
 window.addEventListener('resize',()=>{if(flipbookReady){const {width,height}=getOptimalSize();$('#flipbook').turn('size',width,height);}});
-document.addEventListener('keydown',e=>{
-  if(!flipbookReady)return;
-  if(e.key==='ArrowLeft')$('#flipbook').turn('previous');
-  if(e.key==='ArrowRight')$('#flipbook').turn('next');
-  if(e.key==='Home')$('#flipbook').turn('page',1);
-  if(e.key==='End')$('#flipbook').turn('page',$('#flipbook').turn('pages'));
-});
-
-window.addEventListener('DOMContentLoaded',detectDevice);
-window.addEventListener('load',()=>setTimeout(loadPDFFromStorage,500));
+window.addEventListener('DOMContentLoaded',()=>{detectDevice();startApp();});
 </script>
 </body>
 </html>
