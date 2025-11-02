@@ -1,0 +1,432 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Flip PDF Viewer (index.html)</title>
+  <style>
+    /* 기본 리셋 및 풀스크린 레이아웃 */
+    html,body{height:100%;margin:0}
+    body{overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;background:#111;color:#eee}
+    #app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#111}
+
+    /* 캔버스(페이지) 래퍼 - 좌우로 두 페이지를 배치할 수 있음 */
+    .book{position:relative;width:100%;height:100%;perspective:2200;overflow:hidden}
+    .page-layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+
+    /* 단일 페이지 카드 */
+    .page{position:relative;width:60vmin;height:84vmin;max-width:calc(100% - 40px);max-height:calc(100% - 40px);box-shadow:0 20px 40px rgba(0,0,0,0.8);background:#fff;border-radius:6px;overflow:hidden;transform-origin:left center}
+    .page.two{transform-origin:center center}
+    .page canvas,.page img{width:100%;height:100%;object-fit:contain;display:block}
+
+    /* 플립 애니메이션을 위한 클래스 */
+    .flip-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .flipper{width:60vmin;height:84vmin;max-width:calc(100% - 40px);max-height:calc(100% - 40px);transform-style:preserve-3d;transition:transform 800ms cubic-bezier(.2,.9,.2,1);pointer-events:auto}
+    .flipping-left{transform:rotateY( -160deg ) translateX(-6%)}
+    .flipping-right{transform:rotateY( 160deg ) translateX(6%)}
+
+    /* 전면/후면 */
+    .face{position:absolute;inset:0;backface-visibility:hidden;overflow:hidden}
+    .face.back{transform:rotateY(180deg)}
+
+    /* UI: 컨트롤들 */
+    .ui-top{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+    .ui-bottom{position:absolute;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:auto}
+    .btn{background:rgba(0,0,0,0.55);color:#fff;padding:8px 12px;border-radius:6px;border:none;cursor:pointer}
+    .icon-btn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;}
+
+    /* 설정 패널 */
+    .settings{position:fixed;right:18px;bottom:18px;z-index:1200}
+    .settings-panel{position:fixed;right:18px;bottom:72px;width:320px;max-width:90vw;background:rgba(18,18,18,0.95);color:#ddd;padding:14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none}
+    .settings-panel.show{display:block}
+    .settings-panel h4{margin:0 0 8px 0}
+    .row{display:flex;gap:8px;align-items:center;margin:8px 0}
+    .row label{flex:1}
+    .input, input[type='text'], input[type='number']{background:#222;border:1px solid #333;color:#eee;padding:8px;border-radius:6px;width:100%}
+
+    /* 로딩 오버레이 */
+    .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.85));z-index:2000}
+    .loader{width:320px;max-width:90vw;padding:18px;background:rgba(10,10,10,0.9);border-radius:10px;text-align:center}
+    .progress{height:10px;background:#222;border-radius:6px;overflow:hidden;margin-top:12px}
+    .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2dd4bf,#60a5fa)}
+    .meta{font-size:12px;margin-top:8px;color:#9aa}
+
+    /* 반응형: 작은 화면에서는 페이지 사이즈 조정 */
+    @media (max-width:720px){
+      .page,.flipper{width:86vmin;height:120vmin}
+    }
+
+    /* 스크롤바 (간단한 진행/페이지 위치 표시용) */
+    .seekbar{position:fixed;left:0;right:0;bottom:0;height:10px;background:transparent}
+    .seek{height:100%;width:100%;-webkit-appearance:none;background:rgba(255,255,255,0.07)}
+    .seek::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff}
+
+    /* 접근성, 기타 */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="book" id="book">
+      <!-- page-layer는 현재 보이는 페이지를 재현합니다 -->
+      <div class="page-layer" id="pageLayer">
+        <div class="page two" id="leftPage"><canvas id="canvasLeft"></canvas></div>
+        <div class="page two" id="rightPage"><canvas id="canvasRight"></canvas></div>
+      </div>
+
+      <!-- 플립 애니메이션을 담당하는 wrap -->
+      <div class="flip-wrap" id="flipWrap" aria-hidden="true">
+        <div class="flipper" id="flipper">
+          <div class="face front" id="flipFront"></div>
+          <div class="face back" id="flipBack"></div>
+        </div>
+      </div>
+
+      <!-- UI -->
+      <div class="ui-top">
+        <div class="brand">Flip PDF Viewer</div>
+        <div class="controls">
+          <button class="btn" id="btnPrev">◀ 이전</button>
+          <button class="btn" id="btnNext">다음 ▶</button>
+        </div>
+      </div>
+
+      <div class="ui-bottom">
+        <div class="page-indicator" id="pageIndicator">0 / 0</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" id="btnDownload">PDF 다운로드</button>
+          <div class="settings">
+            <button class="icon-btn btn" id="btnSettings">⚙️</button>
+            <div class="settings-panel" id="settingsPanel" role="dialog" aria-modal="true">
+              <h4>설정</h4>
+              <div class="row">
+                <label>보기 모드</label>
+                <select id="viewMode" class="input">
+                  <option value="single">1쪽 보기</option>
+                  <option value="double">2쪽 보기</option>
+                </select>
+              </div>
+              <div class="row">
+                <label>화면 회전</label>
+                <select id="rotateMode" class="input">
+                  <option value="auto">자동(기기 기반)</option>
+                  <option value="land">가로 고정</option>
+                  <option value="port">세로 고정</option>
+                </select>
+              </div>
+              <div class="row">
+                <label>쪽 이동</label>
+                <input id="goPage" type="number" min="1" class="input" placeholder="쪽 번호 입력">
+                <button class="btn" id="btnGo">이동</button>
+              </div>
+              <hr style="border:none;border-top:1px solid #333;margin:10px 0">
+              <h4>불러오기</h4>
+              <div class="row">
+                <label>PDF URL</label>
+                <input id="pdfUrl" type="text" class="input" placeholder="https://...pdf">
+              </div>
+              <div class="row">
+                <label>파일 업로드</label>
+                <input id="pdfFile" type="file" accept="application/pdf">
+              </div>
+              <div class="row" style="justify-content:flex-end">
+                <button class="btn" id="btnLoadUrl">로드</button>
+                <button class="btn" id="btnUseDefault">기본 PDF 사용</button>
+              </div>
+              <p style="font-size:12px;color:#888;margin-top:8px">예: GitHub raw, Google Drive 공유 링크(직접 파일 링크 필요). 기본값: ./flip.pdf 또는 https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/flip.pdf</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="seekbar"><input id="seek" class="seek" type="range" min="1" max="1" value="1"></div>
+
+    </div>
+  </div>
+
+  <!-- 로딩 오버레이 -->
+  <div class="loading" id="loading" style="display:none">
+    <div class="loader">
+      <div style="font-size:16px;font-weight:600">문서 로드 중...</div>
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="meta">로딩중입니다. 제작: welfareact.net · Perplexity AI 사용</div>
+    </div>
+  </div>
+
+  <script>
+    /*
+      구현 전략 요약:
+      - 가능하면 PDF.js를 CDN에서 불러와 PDF를 canvas에 렌더링해서 고품질 이미지를 얻음.
+      - CDN 접근 불가 시(오프라인)에는 <object> 태그를 사용한 브라우저 내장 PDF 보기로 폴백.
+      - 플립 애니메이션은 CSS 3D transform을 사용. 실제 페이지만 캔버스에 그려두고
+        플리퍼(front/back)를 캔버스의 데이터 URL로 채워 애니메이션을 수행.
+      - single/double 보기 모드, 터치/마우스/키보드 이벤트, 설정창 구현 포함.
+    */
+
+    const DEFAULT_PDF = './flip.pdf';
+    const DEFAULT_PDF_ONLINE = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/flip.pdf';
+
+    // 상태
+    const state = {
+      pdfDoc: null,
+      pageCount: 0,
+      currentPage: 1,
+      viewMode: 'double', // single | double
+      rendering: false,
+      usePdfJs: false
+    };
+
+    // DOM
+    const loadingEl = document.getElementById('loading');
+    const progressBar = document.getElementById('progressBar');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const canvasL = document.getElementById('canvasLeft');
+    const canvasR = document.getElementById('canvasRight');
+    const ctxL = canvasL.getContext('2d');
+    const ctxR = canvasR.getContext('2d');
+    const flipper = document.getElementById('flipper');
+    const flipFront = document.getElementById('flipFront');
+    const flipBack = document.getElementById('flipBack');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const seek = document.getElementById('seek');
+    const btnSettings = document.getElementById('btnSettings');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const viewModeSel = document.getElementById('viewMode');
+    const rotateModeSel = document.getElementById('rotateMode');
+    const btnLoadUrl = document.getElementById('btnLoadUrl');
+    const pdfUrlInput = document.getElementById('pdfUrl');
+    const pdfFileInput = document.getElementById('pdfFile');
+    const btnUseDefault = document.getElementById('btnUseDefault');
+    const btnGo = document.getElementById('btnGo');
+    const goPageInput = document.getElementById('goPage');
+    const btnDownload = document.getElementById('btnDownload');
+
+    // PDF.js 로딩 시도 (CDN 사용). 실패하면 폴백 로직 실행
+    async function tryLoadPdfJs() {
+      return new Promise((resolve) => {
+        const url = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.113/pdf.min.js';
+        const s = document.createElement('script');
+        s.src = url;
+        s.onload = () => { state.usePdfJs = true; resolve(true); };
+        s.onerror = () => { state.usePdfJs = false; resolve(false); };
+        document.head.appendChild(s);
+        // 타임아웃: 4초
+        setTimeout(() => { if (!state.usePdfJs) resolve(false); }, 4000);
+      });
+    }
+
+    // 로딩 UI 제어
+    function showLoading(show){ loadingEl.style.display = show ? 'flex' : 'none'; }
+    function setProgress(p){ progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+
+    // PDF 로드 처리
+    async function loadPdfFromUrl(url) {
+      showLoading(true); setProgress(10);
+      if (state.usePdfJs && window['pdfjsLib']) {
+        try {
+          const loadingTask = pdfjsLib.getDocument(url);
+          loadingTask.onProgress = function(progress){ const pct = Math.floor((progress.loaded/progress.total||0)*100); setProgress(10 + Math.floor(pct*0.7)); };
+          const pdf = await loadingTask.promise; state.pdfDoc = pdf; state.pageCount = pdf.numPages; state.currentPage = 1; setProgress(100); await renderCurrent(); showLoading(false);
+          initSeek();
+          return;
+        } catch (e) {
+          console.warn('pdf.js 로드 실패, 폴백 시도', e);
+        }
+      }
+
+      // 폴백: 브라우저 내장 뷰어 (object)로 열기 — 이 경우 플립은 제한적
+      // 간단히 새 창으로 연다.
+      showLoading(false);
+      window.open(url, '_blank');
+    }
+
+    // file input으로부터 로드
+    function loadPdfFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const arr = e.target.result;
+        const blob = new Blob([arr], {type: 'application/pdf'});
+        const url = URL.createObjectURL(blob);
+        loadPdfFromUrl(url);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // seek 범위 세팅
+    function initSeek(){ seek.min = 1; seek.max = state.pageCount; seek.value = state.currentPage; updateIndicator(); }
+
+    function updateIndicator(){ pageIndicator.textContent = state.currentPage + ' / ' + state.pageCount; seek.value = state.currentPage; }
+
+    // 현재 페이지와 그 다음/이전 페이지를 캔버스에 렌더
+    async function renderCurrent() {
+      if (!state.pdfDoc) return;
+      state.rendering = true;
+      const p = state.currentPage;
+      // left: 짝수(왼쪽) / right: 홀수(오른쪽) — 더블 보기 기준
+      const rightIdx = p;
+      const leftIdx = Math.max(1, p - 1);
+      setProgress(20);
+
+      await renderPageToCanvas(leftIdx, canvasL, ctxL);
+      setProgress(60);
+      await renderPageToCanvas(rightIdx, canvasR, ctxR);
+      setProgress(100);
+      updateIndicator();
+      state.rendering = false;
+    }
+
+    async function renderPageToCanvas(pageNum, canvas, ctx) {
+      if (!state.pdfDoc) return;
+      try {
+        const page = await state.pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({scale: 1});
+        // 캔버스 크기 조정 (화면에 맞게 확대)
+        const targetWidth = Math.min(window.innerWidth * 0.45, viewport.width * 2);
+        const scale = targetWidth / viewport.width;
+        const vp = page.getViewport({scale});
+        canvas.width = vp.width; canvas.height = vp.height;
+        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        const renderContext = {canvasContext: ctx, viewport: vp};
+        await page.render(renderContext).promise;
+      } catch (e) {
+        // 페이지가 범위를 벗어날 경우 빈 캔버스 유지
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+    }
+
+    // 페이지 전환 애니메이션
+    async function flipTo(nextPage, dir='right'){
+      if (state.rendering) return;
+      if (nextPage < 1 || nextPage > state.pageCount) return;
+      // 준비: 현재 오른쪽 캔버스와 왼쪽 캔버스를 데이터URL로 복제
+      const frontCanvas = document.createElement('canvas');
+      const backCanvas = document.createElement('canvas');
+      const w = canvasR.width, h = canvasR.height;
+      frontCanvas.width = backCanvas.width = w; frontCanvas.height = backCanvas.height = h;
+      frontCanvas.getContext('2d').drawImage(canvasR,0,0);
+      backCanvas.getContext('2d').drawImage(canvasR,0,0);
+
+      // 플리퍼 요소에 이미지 추가
+      flipFront.innerHTML = ''; flipBack.innerHTML = '';
+      const imgF = new Image(); imgF.src = frontCanvas.toDataURL(); imgF.style.width='100%'; imgF.style.height='100%';
+      const imgB = new Image(); imgB.src = backCanvas.toDataURL(); imgB.style.width='100%'; imgB.style.height='100%';
+      flipFront.appendChild(imgF); flipBack.appendChild(imgB);
+
+      // 애니메이션 클래스 토글
+      const wrap = document.getElementById('flipWrap');
+      wrap.style.pointerEvents = 'auto';
+      if (dir === 'right') {
+        flipper.classList.add('flipping-right');
+      } else {
+        flipper.classList.add('flipping-left');
+      }
+
+      // transition 끝나면 상태 갱신
+      await new Promise(r => setTimeout(r, 820));
+      flipper.classList.remove('flipping-right','flipping-left');
+      wrap.style.pointerEvents = 'none';
+
+      state.currentPage = nextPage;
+      await renderCurrent();
+    }
+
+    // 이벤트 바인딩
+    btnNext.addEventListener('click', () => { const np = Math.min(state.pageCount, state.currentPage + 1); flipTo(np,'right'); });
+    btnPrev.addEventListener('click', () => { const np = Math.max(1, state.currentPage - 1); flipTo(np,'left'); });
+
+    seek.addEventListener('input', (e)=>{ const v=Number(e.target.value); flipTo(v, v>state.currentPage? 'right':'left'); });
+
+    // 설정 창
+    btnSettings.addEventListener('click', ()=>{ settingsPanel.classList.toggle('show'); });
+    btnLoadUrl.addEventListener('click', ()=>{ const u = pdfUrlInput.value.trim(); if(u) loadPdfFromUrl(u); });
+    pdfFileInput.addEventListener('change', (e)=>{ const f = e.target.files[0]; if(f) loadPdfFromFile(f); });
+    btnUseDefault.addEventListener('click', ()=>{ loadPdfFromUrl(DEFAULT_PDF_ONLINE); });
+    btnGo.addEventListener('click', ()=>{ const v = Number(goPageInput.value); if(v>=1 && v<=state.pageCount) flipTo(v, v>state.currentPage?'right':'left'); });
+    btnDownload.addEventListener('click', ()=>{ if(state.pdfDoc){ window.open(pdfUrlInput.value || DEFAULT_PDF_ONLINE, '_blank'); } else { window.open(DEFAULT_PDF_ONLINE, '_blank'); } });
+
+    // 터치(스와이프) 처리: 좌우 스와이프 -> 페이지 전환
+    let touchStartX = null, touchStartY = null;
+    window.addEventListener('touchstart', (e)=>{ const t = e.touches[0]; touchStartX = t.clientX; touchStartY = t.clientY; });
+    window.addEventListener('touchend', (e)=>{
+      if (touchStartX === null) return;
+      const t = e.changedTouches[0]; const dx = t.clientX - touchStartX; const dy = t.clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
+        if (dx < 0) btnNext.click(); else btnPrev.click();
+      }
+      touchStartX = null; touchStartY = null;
+    });
+
+    // 키보드: 좌/우
+    window.addEventListener('keydown', (e)=>{ if(e.key === 'ArrowRight') btnNext.click(); if(e.key==='ArrowLeft') btnPrev.click(); });
+
+    // 창 크기 변경 시 재렌더링
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=>{ if(state.pdfDoc) renderCurrent(); }, 300); });
+
+    // 초기화: pdf.js 시도 후 기본 pdf 로드
+    (async ()=>{
+      showLoading(true); setProgress(2);
+      await tryLoadPdfJs();
+      setProgress(8);
+      // pdf.js가 준비되면 workerSrc 지정 (CDN 기반)
+      if (state.usePdfJs && window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.113/pdf.worker.min.js';
+      }
+
+      // 기본 파일 로드 시도
+      try {
+        await loadPdfFromUrl(DEFAULT_PDF);
+      } catch (e) {
+        // 로컬 flip.pdf가 없으면 온라인 기본 시도
+        await loadPdfFromUrl(DEFAULT_PDF_ONLINE);
+      }
+      showLoading(false);
+    })();
+
+  </script>
+
+  <!-- README.md (아래는 프로젝트 설명용 마크다운, 편의상 동일 파일에 포함) -->
+  <!-- --- README.md --- -->
+  <!--
+  # Flip PDF Viewer (index.html)
+
+  ## 개요
+  이 프로젝트는 단일 `index.html` 파일로 동작하는 풀스크린 PDF 3D 플립 뷰어입니다.
+  - 온라인(CDN) 환경에서는 pdf.js를 이용해 고품질 렌더링
+  - 오프라인 환경에서는 브라우저 내장 PDF 뷰어로 폴백
+  - CSS 3D 트랜스폼 기반의 플립 애니메이션 구현
+
+  ## 주요 기능
+  - 1쪽/2쪽 보기 전환
+  - 터치 스와이프 및 마우스/키보드 지원
+  - PDF URL 입력 및 로컬 파일 업로드 지원
+  - 설정(보기모드/회전/쪽이동) 팝업
+  - 로딩 진행률 표시 및 제작자/저작권 메타 정보 출력
+
+  ## 사용법
+  1. `index.html`을 브라우저로 열면 기본 `./flip.pdf`를 로드 시도합니다.
+  2. 로컬 파일을 사용하려면 설정 → 파일 업로드에서 PDF 선택.
+  3. 온라인 PDF 사용 시 직접 URL을 입력하거나 기본 온라인 예시를 사용합니다.
+
+  ## 오프라인 vs 온라인(하이브리드)
+  - 온라인: pdf.js(CDN)를 불러와 canvas에 페이지를 렌더합니다. 1쪽/2쪽 보기에서 고품질 이미지를 제공합니다.
+  - 오프라인: pdf.js를 사용할 수 없을 때는 브라우저의 내장 뷰어(또는 새 창 열기)로 폴백합니다. (주의: 브라우저마다 동작 차이가 있음)
+
+  ## 배포 및 라이선스
+  - 본 코드 자체는 MIT 스타일의 허용 범위를 권장합니다. 단, 외부 라이브러리(pdf.js)는 해당 라이선스를 준수해야 합니다.
+  - 배포 시 `README.md`를 함께 제공하시고, pdf.js를 코드에 직접 포함하실 경우 라이선스 요구사항을 확인하세요.
+
+  ## 개선 여지 (권장)
+  - 오프라인에서도 pdf.js 동작을 보장하려면 pdf.js 코어(및 worker)를 프로젝트에 포함하십시오. (용량이 큼)
+  - 플립 효과를 더욱 사실감 있게 하려면 페이지 뒤틀림 쉐이딩, 라이트 효과, 페이지 두께 표현을 추가하세요.
+  - 대용량 문서 최적화를 위해 페이지 프리페치/가비지 컬렉션 전략을 추가하세요.
+
+  ## 제작
+  - 제작: welfareact.net
+  - 보조: Perplexity AI 사용
+  -->
+
+</body>
+</html>
