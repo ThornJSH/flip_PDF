@@ -31,7 +31,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
+            z-index: 999;
             color: white;
         }
 
@@ -79,7 +79,7 @@
             font-size: 14px;
             text-align: center;
             margin-top: 20px;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         /* Main Container */
@@ -90,95 +90,63 @@
             justify-content: center;
             align-items: center;
             position: relative;
+            padding: 20px;
         }
 
         /* Flip Book Container */
-        #flipbook {
+        #flipbook-wrapper {
             position: relative;
-            perspective: 2000px;
             width: 90%;
-            height: 85%;
             max-width: 1400px;
-            max-height: 800px;
+            height: 85vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .page-container {
-            position: absolute;
-            width: 50%;
-            height: 100%;
+        #flipbook {
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        #flipbook .page {
             background: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transform-origin: left center;
-            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        .page-container.left {
-            left: 0;
-            transform-origin: right center;
-        }
-
-        .page-container.right {
-            right: 0;
-            transform-origin: left center;
-        }
-
-        .page-container.flipping-left {
-            transform: rotateY(-180deg);
-        }
-
-        .page-container.flipping-right {
-            transform: rotateY(180deg);
-        }
-
-        .page-canvas {
+        #flipbook .page img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
 
-        /* Navigation Buttons */
-        .nav-button {
-            position: fixed;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s;
-            z-index: 100;
+        /* Turn.js 3D Effects */
+        .shadow {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
-        .nav-button:hover {
-            background: white;
-            transform: translateY(-50%) scale(1.1);
+        .page-depth {
+            position: relative;
         }
 
-        .nav-button:active {
-            transform: translateY(-50%) scale(0.95);
-        }
-
-        #prev-btn {
-            left: 20px;
-        }
-
-        #next-btn {
-            right: 20px;
+        .page-depth::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, transparent 10%);
+            pointer-events: none;
         }
 
         /* Settings Button */
         #settings-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 32px;
+            right: 32px;
             width: 50px;
             height: 50px;
             background: rgba(255, 255, 255, 0.9);
@@ -189,9 +157,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: all 0.3s;
-            z-index: 100;
+            z-index: 30;
         }
 
         #settings-btn:hover {
@@ -202,7 +170,7 @@
         /* Page Info */
         #page-info {
             position: fixed;
-            bottom: 20px;
+            bottom: 32px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.9);
@@ -210,46 +178,7 @@
             border-radius: 25px;
             font-size: 14px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 100;
-        }
-
-        /* Progress Scrollbar (Mobile) */
-        #progress-scrollbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            padding: 0 10px;
-            z-index: 100;
-        }
-
-        #progress-track {
-            flex: 1;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            position: relative;
-            cursor: pointer;
-        }
-
-        #progress-thumb {
-            position: absolute;
-            top: -4px;
-            left: 0;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            cursor: grab;
-        }
-
-        #progress-thumb:active {
-            cursor: grabbing;
+            z-index: 30;
         }
 
         /* Settings Modal */
@@ -263,7 +192,7 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 100;
         }
 
         #settings-modal.active {
@@ -278,7 +207,7 @@
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .modal-header {
@@ -364,6 +293,16 @@
             margin-right: 5px;
         }
 
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
         .btn {
             padding: 10px 20px;
             border: none;
@@ -392,6 +331,14 @@
             background: #ccc;
         }
 
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
         .example-text {
             font-size: 12px;
             color: #999;
@@ -401,21 +348,23 @@
 
         /* Mobile Styles */
         @media (max-width: 768px) {
-            .nav-button {
-                display: none;
-            }
-
-            #progress-scrollbar {
-                display: flex;
-            }
-
-            #flipbook {
+            #flipbook-wrapper {
                 width: 95%;
-                height: 80%;
+                height: 80vh;
             }
 
             #page-info {
-                bottom: 50px;
+                bottom: 20px;
+                font-size: 12px;
+                padding: 8px 16px;
+            }
+
+            #settings-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
             }
 
             .modal-content {
@@ -424,19 +373,17 @@
             }
         }
 
-        /* Single Page Mode */
-        .single-page-mode #flipbook {
-            width: 60%;
+        /* Rotation Classes */
+        .rotate-90 {
+            transform: rotate(90deg);
         }
 
-        .single-page-mode .page-container {
-            width: 100%;
+        .rotate-180 {
+            transform: rotate(180deg);
         }
 
-        @media (max-width: 768px) {
-            .single-page-mode #flipbook {
-                width: 95%;
-            }
+        .rotate-270 {
+            transform: rotate(270deg);
         }
     </style>
 </head>
@@ -451,18 +398,15 @@
         <div class="credits">
             <div>Perplexity AI 사용</div>
             <div>welfareact.net에서 제작</div>
-            <div style="margin-top: 10px; font-size: 12px;">Turn.js © BSD License (Non-commercial)</div>
         </div>
     </div>
 
     <!-- Main Viewer -->
     <div id="viewer-container">
-        <div id="flipbook"></div>
+        <div id="flipbook-wrapper">
+            <div id="flipbook"></div>
+        </div>
     </div>
-
-    <!-- Navigation Buttons -->
-    <button id="prev-btn" class="nav-button">‹</button>
-    <button id="next-btn" class="nav-button">›</button>
 
     <!-- Settings Button -->
     <button id="settings-btn">⚙</button>
@@ -472,19 +416,12 @@
         <span id="current-page">1</span> / <span id="total-pages">0</span>
     </div>
 
-    <!-- Progress Scrollbar (Mobile) -->
-    <div id="progress-scrollbar">
-        <div id="progress-track">
-            <div id="progress-thumb"></div>
-        </div>
-    </div>
-
     <!-- Settings Modal -->
     <div id="settings-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>설정</h2>
-                <button class="close-btn" id="close-modal">×</button>
+                <button class="close-btn" id="close-modal-x">×</button>
             </div>
 
             <div class="settings-section">
@@ -504,11 +441,20 @@
             </div>
 
             <div class="settings-section">
+                <h3>화면 회전</h3>
+                <div class="setting-item">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="rotate-screen">
+                        <label for="rotate-screen">90도 회전</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
                 <h3>페이지 이동</h3>
                 <div class="setting-item">
                     <label>페이지 번호:</label>
                     <input type="number" id="goto-page" min="1" placeholder="페이지 번호 입력">
-                    <button class="btn btn-primary" id="goto-btn" style="margin-top: 10px;">이동</button>
                 </div>
             </div>
 
@@ -521,26 +467,36 @@
                         GitHub: https://raw.githubusercontent.com/[user]/[repo]/main/document.pdf<br>
                         Google Drive: https://drive.google.com/uc?export=download&amp;id=[FILE_ID]
                     </div>
-                    <button class="btn btn-primary" id="load-url-btn" style="margin-top: 10px;">URL에서 로드</button>
                 </div>
-                <div class="setting-item" style="margin-top: 20px;">
+                <div class="setting-item" style="margin-top: 15px;">
                     <label>파일 업로드:</label>
                     <input type="file" id="pdf-file" accept=".pdf">
                 </div>
-                <div class="setting-item" style="margin-top: 20px;">
-                    <button class="btn btn-secondary" id="load-default-btn">기본 PDF 로드 (flip.pdf)</button>
+                <div class="setting-item" style="margin-top: 15px;">
+                    <button class="btn btn-secondary" id="load-default-btn">기본 PDF 사용 (flip.pdf)</button>
                 </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-btn">취소</button>
+                <button class="btn btn-primary" id="save-btn">저장</button>
             </div>
         </div>
     </div>
 
+    <!-- jQuery (required for Turn.js) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Turn.js Library -->
+    <script src="https://cdn.jsdelivr.net/gh/blasten/turn.js@master/turn.min.js"></script>
+    
     <!-- PDF.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.min.js"></script>
 
     <script>
         // PDF.js worker configuration
         if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist/build/pdf.worker.min.js';
         }
 
         // Application State
@@ -549,34 +505,32 @@
             currentPage: 1,
             totalPages: 0,
             viewMode: 'double',
+            rotationAngle: 0,
             renderedPages: {},
             isMobile: window.innerWidth <= 768,
-            isFlipping: false,
-            touchStartX: 0,
-            touchStartY: 0
+            currentPdfSource: './flip.pdf',
+            pendingSettings: {}
         };
 
         // DOM Elements
         const elements = {
             loadingScreen: document.getElementById('loading-screen'),
             progressFill: document.getElementById('progress-fill'),
-            flipbook: document.getElementById('flipbook'),
-            prevBtn: document.getElementById('prev-btn'),
-            nextBtn: document.getElementById('next-btn'),
+            flipbook: $('#flipbook'),
             settingsBtn: document.getElementById('settings-btn'),
             currentPageSpan: document.getElementById('current-page'),
             totalPagesSpan: document.getElementById('total-pages'),
             settingsModal: document.getElementById('settings-modal'),
-            closeModal: document.getElementById('close-modal'),
-            progressThumb: document.getElementById('progress-thumb'),
-            progressTrack: document.getElementById('progress-track'),
+            closeModalX: document.getElementById('close-modal-x'),
             viewModeRadios: document.querySelectorAll('input[name="view-mode"]'),
+            rotateCheckbox: document.getElementById('rotate-screen'),
             gotoPageInput: document.getElementById('goto-page'),
-            gotoBtn: document.getElementById('goto-btn'),
             pdfUrlInput: document.getElementById('pdf-url'),
-            loadUrlBtn: document.getElementById('load-url-btn'),
             pdfFileInput: document.getElementById('pdf-file'),
-            loadDefaultBtn: document.getElementById('load-default-btn')
+            loadDefaultBtn: document.getElementById('load-default-btn'),
+            saveBtn: document.getElementById('save-btn'),
+            cancelBtn: document.getElementById('cancel-btn'),
+            flipbookWrapper: document.getElementById('flipbook-wrapper')
         };
 
         // Initialize Application
@@ -599,19 +553,22 @@
                 }
 
                 loadingTask.onProgress = function(progress) {
-                    const percent = (progress.loaded / progress.total) * 100;
-                    elements.progressFill.style.width = percent + '%';
+                    if (progress.total > 0) {
+                        const percent = (progress.loaded / progress.total) * 100;
+                        elements.progressFill.style.width = percent + '%';
+                    }
                 };
 
                 state.pdfDoc = await loadingTask.promise;
                 state.totalPages = state.pdfDoc.numPages;
                 state.currentPage = 1;
                 state.renderedPages = {};
+                state.currentPdfSource = source;
 
                 elements.totalPagesSpan.textContent = state.totalPages;
                 elements.gotoPageInput.max = state.totalPages;
 
-                await renderCurrentPages();
+                await initFlipbook();
 
                 setTimeout(() => {
                     elements.loadingScreen.classList.add('hidden');
@@ -623,40 +580,98 @@
             }
         }
 
-        // Render Current Pages
-        async function renderCurrentPages() {
-            elements.flipbook.innerHTML = '';
+        // Initialize Turn.js Flipbook
+        async function initFlipbook() {
+            // Destroy existing flipbook if any
+            if (elements.flipbook.turn('is')) {
+                elements.flipbook.turn('destroy');
+            }
 
-            if (state.viewMode === 'single' || state.isMobile) {
-                document.body.classList.add('single-page-mode');
-                await renderPage(state.currentPage, 'single');
+            // Clear flipbook
+            elements.flipbook.html('');
+
+            // Add pages
+            for (let i = 1; i <= state.totalPages; i++) {
+                elements.flipbook.append(`<div class="page" id="page-${i}"></div>`);
+            }
+
+            // Calculate dimensions
+            const wrapperWidth = elements.flipbookWrapper.offsetWidth;
+            const wrapperHeight = elements.flipbookWrapper.offsetHeight;
+            let width, height;
+
+            if (state.viewMode === 'double' && !state.isMobile) {
+                width = wrapperWidth * 0.9;
+                height = wrapperHeight * 0.9;
             } else {
-                document.body.classList.remove('single-page-mode');
-                // Even pages on left, odd on right for book-like experience
-                if (state.currentPage === 1) {
-                    await renderPage(1, 'single');
-                } else {
-                    const leftPage = state.currentPage % 2 === 0 ? state.currentPage : state.currentPage - 1;
-                    const rightPage = leftPage + 1;
-                    if (leftPage <= state.totalPages) {
-                        await renderPage(leftPage, 'left');
+                width = wrapperWidth * 0.7;
+                height = wrapperHeight * 0.9;
+            }
+
+            // Initialize Turn.js with 3D effects
+            elements.flipbook.turn({
+                width: width,
+                height: height,
+                autoCenter: true,
+                display: state.viewMode === 'double' && !state.isMobile ? 'double' : 'single',
+                acceleration: true,
+                gradients: true,
+                elevation: 75,
+                when: {
+                    turning: function(event, page, view) {
+                        state.currentPage = page;
+                        updatePageInfo();
+                    },
+                    turned: function(event, page, view) {
+                        state.currentPage = page;
+                        updatePageInfo();
+                        // Render visible pages
+                        renderVisiblePages();
                     }
-                    if (rightPage <= state.totalPages) {
-                        await renderPage(rightPage, 'right');
-                    }
+                }
+            });
+
+            // Render initial pages
+            await renderVisiblePages();
+        }
+
+        // Render Visible Pages
+        async function renderVisiblePages() {
+            const currentView = elements.flipbook.turn('view');
+            
+            for (let pageNum of currentView) {
+                if (pageNum > 0 && pageNum <= state.totalPages) {
+                    await renderPage(pageNum);
                 }
             }
 
-            updatePageInfo();
+            // Preload adjacent pages
+            const nextPages = elements.flipbook.turn('view');
+            for (let pageNum of nextPages) {
+                if (pageNum + 1 <= state.totalPages) {
+                    renderPage(pageNum + 1);
+                }
+                if (pageNum - 1 > 0) {
+                    renderPage(pageNum - 1);
+                }
+            }
         }
 
         // Render Single Page
-        async function renderPage(pageNum, position) {
+        async function renderPage(pageNum) {
             if (pageNum < 1 || pageNum > state.totalPages) return;
+            if (state.renderedPages[pageNum]) {
+                // Already rendered
+                const pageElement = $(`#page-${pageNum}`);
+                if (pageElement.find('img').length === 0) {
+                    pageElement.html(`<img src="${state.renderedPages[pageNum]}" alt="Page ${pageNum}">`);
+                }
+                return;
+            }
 
-            if (!state.renderedPages[pageNum]) {
+            try {
                 const page = await state.pdfDoc.getPage(pageNum);
-                const scale = 2;
+                const scale = 2.0;
                 const viewport = page.getViewport({ scale });
 
                 const canvas = document.createElement('canvas');
@@ -669,236 +684,184 @@
                     viewport: viewport
                 }).promise;
 
-                state.renderedPages[pageNum] = canvas.toDataURL();
-            }
+                const dataUrl = canvas.toDataURL();
+                state.renderedPages[pageNum] = dataUrl;
 
-            const pageContainer = document.createElement('div');
-            pageContainer.className = `page-container ${position}`;
-            pageContainer.dataset.page = pageNum;
-
-            const img = document.createElement('img');
-            img.src = state.renderedPages[pageNum];
-            img.className = 'page-canvas';
-
-            pageContainer.appendChild(img);
-            elements.flipbook.appendChild(pageContainer);
-        }
-
-        // Navigate to Next Page
-        function nextPage() {
-            if (state.isFlipping) return;
-
-            const increment = (state.viewMode === 'double' && !state.isMobile) ? 2 : 1;
-            if (state.currentPage + increment <= state.totalPages) {
-                state.isFlipping = true;
-                state.currentPage += increment;
-                renderCurrentPages();
-                setTimeout(() => {
-                    state.isFlipping = false;
-                }, 800);
-            }
-        }
-
-        // Navigate to Previous Page
-        function prevPage() {
-            if (state.isFlipping) return;
-
-            const decrement = (state.viewMode === 'double' && !state.isMobile) ? 2 : 1;
-            if (state.currentPage - decrement >= 1) {
-                state.isFlipping = true;
-                state.currentPage -= decrement;
-                renderCurrentPages();
-                setTimeout(() => {
-                    state.isFlipping = false;
-                }, 800);
-            }
-        }
-
-        // Go to Specific Page
-        function gotoPage(pageNum) {
-            pageNum = parseInt(pageNum);
-            if (pageNum >= 1 && pageNum <= state.totalPages && pageNum !== state.currentPage) {
-                state.currentPage = pageNum;
-                renderCurrentPages();
+                const pageElement = $(`#page-${pageNum}`);
+                pageElement.html(`<img src="${dataUrl}" alt="Page ${pageNum}">`);
+                pageElement.addClass('shadow page-depth');
+            } catch (error) {
+                console.error(`페이지 ${pageNum} 렌더링 오류:`, error);
             }
         }
 
         // Update Page Info
         function updatePageInfo() {
             elements.currentPageSpan.textContent = state.currentPage;
-            
-            // Update progress thumb position
-            const progress = (state.currentPage - 1) / (state.totalPages - 1);
-            const thumbPosition = progress * (elements.progressTrack.offsetWidth - 16);
-            elements.progressThumb.style.left = thumbPosition + 'px';
+        }
+
+        // Apply Settings
+        async function applySettings() {
+            const settings = state.pendingSettings;
+            let needsReload = false;
+            let pdfSource = null;
+
+            // Check view mode
+            if (settings.viewMode && settings.viewMode !== state.viewMode) {
+                state.viewMode = settings.viewMode;
+                needsReload = true;
+            }
+
+            // Apply rotation
+            if (settings.rotation !== undefined) {
+                if (settings.rotation) {
+                    state.rotationAngle = (state.rotationAngle + 90) % 360;
+                } else {
+                    state.rotationAngle = 0;
+                }
+                elements.flipbookWrapper.style.transform = `rotate(${state.rotationAngle}deg)`;
+            }
+
+            // Check PDF source
+            if (settings.pdfUrl) {
+                pdfSource = settings.pdfUrl;
+            } else if (settings.pdfFile) {
+                pdfSource = settings.pdfFile;
+            } else if (settings.useDefault) {
+                pdfSource = './flip.pdf';
+            }
+
+            // Load new PDF if specified
+            if (pdfSource && pdfSource !== state.currentPdfSource) {
+                await loadPDF(pdfSource);
+            } else if (needsReload) {
+                await initFlipbook();
+            }
+
+            // Go to page
+            if (settings.gotoPage && settings.gotoPage !== state.currentPage) {
+                elements.flipbook.turn('page', settings.gotoPage);
+            }
+
+            // Clear pending settings
+            state.pendingSettings = {};
         }
 
         // Setup Event Listeners
         function setupEventListeners() {
-            // Navigation buttons
-            elements.prevBtn.addEventListener('click', prevPage);
-            elements.nextBtn.addEventListener('click', nextPage);
-
             // Settings button
             elements.settingsBtn.addEventListener('click', () => {
+                // Reset form to current state
+                document.querySelector(`input[name="view-mode"][value="${state.viewMode}"]`).checked = true;
+                elements.rotateCheckbox.checked = false;
+                elements.gotoPageInput.value = '';
+                elements.pdfUrlInput.value = '';
+                elements.pdfFileInput.value = '';
+                
                 elements.settingsModal.classList.add('active');
             });
 
-            // Close modal
-            elements.closeModal.addEventListener('click', () => {
+            // Close modal (X button)
+            elements.closeModalX.addEventListener('click', () => {
                 elements.settingsModal.classList.remove('active');
             });
 
+            // Cancel button
+            elements.cancelBtn.addEventListener('click', () => {
+                state.pendingSettings = {};
+                elements.settingsModal.classList.remove('active');
+            });
+
+            // Save button
+            elements.saveBtn.addEventListener('click', async () => {
+                // Collect settings
+                state.pendingSettings = {};
+
+                // View mode
+                const selectedViewMode = document.querySelector('input[name="view-mode"]:checked').value;
+                state.pendingSettings.viewMode = selectedViewMode;
+
+                // Rotation
+                state.pendingSettings.rotation = elements.rotateCheckbox.checked;
+
+                // Page navigation
+                const gotoPage = parseInt(elements.gotoPageInput.value);
+                if (gotoPage >= 1 && gotoPage <= state.totalPages) {
+                    state.pendingSettings.gotoPage = gotoPage;
+                }
+
+                // PDF source
+                const pdfUrl = elements.pdfUrlInput.value.trim();
+                if (pdfUrl) {
+                    state.pendingSettings.pdfUrl = pdfUrl;
+                } else if (elements.pdfFileInput.files.length > 0) {
+                    const file = elements.pdfFileInput.files[0];
+                    if (file.type === 'application/pdf') {
+                        const reader = new FileReader();
+                        await new Promise((resolve) => {
+                            reader.onload = function(event) {
+                                state.pendingSettings.pdfFile = new Uint8Array(event.target.result);
+                                resolve();
+                            };
+                            reader.readAsArrayBuffer(file);
+                        });
+                    }
+                }
+
+                // Close modal
+                elements.settingsModal.classList.remove('active');
+
+                // Apply settings
+                await applySettings();
+                
+                // Show confirmation
+                alert('설정이 적용되었습니다.');
+            });
+
+            // Load default PDF button
+            elements.loadDefaultBtn.addEventListener('click', () => {
+                elements.pdfUrlInput.value = '';
+                elements.pdfFileInput.value = '';
+                state.pendingSettings.useDefault = true;
+            });
+
+            // Click outside modal to close
             elements.settingsModal.addEventListener('click', (e) => {
                 if (e.target === elements.settingsModal) {
+                    state.pendingSettings = {};
                     elements.settingsModal.classList.remove('active');
                 }
-            });
-
-            // View mode change
-            elements.viewModeRadios.forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    state.viewMode = e.target.value;
-                    renderCurrentPages();
-                });
-            });
-
-            // Go to page
-            elements.gotoBtn.addEventListener('click', () => {
-                const pageNum = elements.gotoPageInput.value;
-                if (pageNum) {
-                    gotoPage(pageNum);
-                    elements.settingsModal.classList.remove('active');
-                }
-            });
-
-            elements.gotoPageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    elements.gotoBtn.click();
-                }
-            });
-
-            // Load PDF from URL
-            elements.loadUrlBtn.addEventListener('click', () => {
-                const url = elements.pdfUrlInput.value.trim();
-                if (url) {
-                    loadPDF(url);
-                    elements.settingsModal.classList.remove('active');
-                }
-            });
-
-            // Load PDF from file
-            elements.pdfFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file && file.type === 'application/pdf') {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        loadPDF(new Uint8Array(event.target.result));
-                        elements.settingsModal.classList.remove('active');
-                    };
-                    reader.readAsArrayBuffer(file);
-                }
-            });
-
-            // Load default PDF
-            elements.loadDefaultBtn.addEventListener('click', () => {
-                loadPDF('./flip.pdf');
-                elements.settingsModal.classList.remove('active');
             });
 
             // Keyboard navigation
             document.addEventListener('keydown', (e) => {
+                if (elements.settingsModal.classList.contains('active')) return;
+                
                 if (e.key === 'ArrowLeft') {
-                    prevPage();
+                    elements.flipbook.turn('previous');
                 } else if (e.key === 'ArrowRight') {
-                    nextPage();
+                    elements.flipbook.turn('next');
                 }
-            });
-
-            // Touch events
-            elements.flipbook.addEventListener('touchstart', handleTouchStart, {passive: true});
-            elements.flipbook.addEventListener('touchmove', handleTouchMove, {passive: true});
-            elements.flipbook.addEventListener('touchend', handleTouchEnd, {passive: true});
-
-            // Click events for desktop
-            elements.flipbook.addEventListener('click', (e) => {
-                if (state.isMobile) return;
-                const rect = elements.flipbook.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                if (x < rect.width / 2) {
-                    prevPage();
-                } else {
-                    nextPage();
-                }
-            });
-
-            // Progress scrollbar drag
-            let isDragging = false;
-            elements.progressThumb.addEventListener('mousedown', () => {
-                isDragging = true;
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    const rect = elements.progressTrack.getBoundingClientRect();
-                    let x = e.clientX - rect.left;
-                    x = Math.max(0, Math.min(x, rect.width));
-                    const progress = x / rect.width;
-                    const pageNum = Math.round(progress * (state.totalPages - 1)) + 1;
-                    gotoPage(pageNum);
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-
-            elements.progressTrack.addEventListener('click', (e) => {
-                const rect = elements.progressTrack.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const progress = x / rect.width;
-                const pageNum = Math.round(progress * (state.totalPages - 1)) + 1;
-                gotoPage(pageNum);
             });
 
             // Window resize
+            let resizeTimeout;
             window.addEventListener('resize', () => {
-                const wasMobile = state.isMobile;
-                state.isMobile = window.innerWidth <= 768;
-                if (wasMobile !== state.isMobile) {
-                    renderCurrentPages();
-                }
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(async () => {
+                    const wasMobile = state.isMobile;
+                    state.isMobile = window.innerWidth <= 768;
+                    if (wasMobile !== state.isMobile) {
+                        await initFlipbook();
+                    }
+                }, 300);
             });
         }
 
-        // Touch Event Handlers
-        function handleTouchStart(e) {
-            state.touchStartX = e.touches[0].clientX;
-            state.touchStartY = e.touches[0].clientY;
-        }
-
-        function handleTouchMove(e) {
-            // Touch move handling if needed
-        }
-
-        function handleTouchEnd(e) {
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            const deltaX = touchEndX - state.touchStartX;
-            const deltaY = touchEndY - state.touchStartY;
-
-            // Check if horizontal swipe is dominant
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-                if (deltaX > 0) {
-                    prevPage();
-                } else {
-                    nextPage();
-                }
-            }
-        }
-
         // Start the application
-        init();
+        $(document).ready(function() {
+            init();
+        });
     </script>
 </body>
 </html>
