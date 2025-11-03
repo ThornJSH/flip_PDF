@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-    <title>PDF 플립북 (v7 최종 수정안)</title>
+    <title>PDF 플립북</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
         
@@ -124,8 +124,9 @@
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/이슈와 놀자 최종 보고서.pdf';
-
+        <!-- PDF URL 시작 -->
+        const PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/flip.pdf';
+        <!-- PDF URL 끝 -->
         let pdfDoc = null, isMobileDevice = false, pdfOrientation = 'portrait', flipbookReady = false, isDragging = false, menuVisibleTimer = null;
 
         const loadingScreen = document.getElementById('loadingScreen');
