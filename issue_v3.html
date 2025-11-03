@@ -137,6 +137,21 @@
             isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(ua);
         }
 
+        function getRenderScale(){
+            // PC는 scale 2, 모바일은 scale 1로 렌더링
+            return isMobileDevice ? 1 : 2;
+        }
+
+        function getAnimationDuration(){
+            // 모바일은 300ms, PC는 1000ms
+            return isMobileDevice ? 300 : 1000;
+        }
+
+        function getElevation(){
+            // 모바일은 낮은 elevation, PC는 높은 elevation
+            return isMobileDevice ? 10 : 50;
+        }
+
         function showLoading(){
             document.getElementById('loadingScreen').style.display='flex';
             document.getElementById('viewerScreen').classList.remove('show');
@@ -196,13 +211,14 @@
             const flipbook=document.getElementById('flipbook');
             flipbook.innerHTML='';
             const numPages=pdfDoc.numPages;
+            const scale = getRenderScale();
             
             for(let i=1;i<=numPages;i++){
                 const progressPercentage = 70 + ((i / numPages) * 25);
                 updateProgress(progressPercentage, 100, `페이지 렌더링: ${i}/${numPages}`);
                 
                 const page=await pdfDoc.getPage(i);
-                const vp=page.getViewport({scale:2});
+                const vp=page.getViewport({scale:scale});
                 const canvas=document.createElement('canvas');
                 canvas.width=vp.width;
                 canvas.height=vp.height;
@@ -219,11 +235,14 @@
 
         function initFlipbook(){
             const {width,height,display}=getOptimalSize();
+            const duration = getAnimationDuration();
+            const elevation = getElevation();
+            
             $('#flipbook').turn({
                 width,height,display,
                 autoCenter:true,
-                duration:isMobileDevice?500:1000,
-                elevation:isMobileDevice?20:50,
+                duration:duration,
+                elevation:elevation,
                 gradients:true,
                 when:{turned:updatePage}
             });
