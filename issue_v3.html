@@ -6,63 +6,77 @@
     <title>PDF 플립북</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
-        *{margin:0;padding:0;box-sizing:border-box}
-        html,body{width:100%;height:100%;overflow:hidden}
-        body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#1a1a1a}
-        .app{display:flex;width:100%;height:100%}
-        .loading-screen{display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%)}
-        .loading-content{text-align:center;max-width:400px;width:90%}
-        .loading-icon{font-size:5em;margin-bottom:30px;animation:bounce 2s infinite}
-        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
-        .loading-text{font-size:1.3em;color:#888;font-weight:500;margin-bottom:10px}
-        .loading::after{content:'...';animation:dots 1.5s steps(4) infinite}
-        @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
-        .progress-container{margin:30px 0;display:flex;flex-direction:column;gap:16px}
-        .progress-bar{width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.3)}
-        .progress-fill{height:100%;background:linear-gradient(90deg,#7c3aed 0%,#a855f7 100%);border-radius:4px;width:0%;transition:width 0.3s ease;box-shadow:0 0 16px rgba(124,58,237,0.6)}
-        .progress-text{text-align:center;color:#aaa;font-size:0.95em;font-weight:600;letter-spacing:0.5px}
-        .progress-status{text-align:center;color:#888;font-size:0.85em;margin-top:8px;min-height:20px}
-        .loading-credit{font-size:.9em;color:#666;margin-top:40px;line-height:1.8}
-        .loading-credit-title{font-size:.95em;color:#888;font-weight:600;margin-bottom:8px}
-        .loading-credit-text{color:#666;font-size:.85em}
-        .loading-credit-link{color:#7c3aed;text-decoration:none;font-weight:600;transition:all .3s}
-        .loading-credit-link:hover{color:#a855f7;text-decoration:underline}
-        .viewer-screen{display:none;flex-direction:column;width:100%;height:100%;background:#000;position:relative;overflow:hidden}
-        .viewer-screen.show{display:flex}
-        .top-progress-container{width:100%;height:6px;background:rgba(255,255,255,0.08);position:relative;cursor:pointer;user-select:none;flex-shrink:0}
-        .top-progress-bar{height:100%;background:linear-gradient(90deg,#7c3aed 0%,#a855f7 100%);border-radius:0;width:0%;transition:width 0.1s linear;box-shadow:0 0 16px rgba(124,58,237,0.6);position:relative;display:flex;align-items:center;justify-content:flex-end}
-        .top-progress-handle{position:relative;width:14px;height:14px;background:white;border-radius:50%;transform:translateX(50%);cursor:grab;box-shadow:0 2px 8px rgba(124,58,237,0.5);transition:all 0.2s;flex-shrink:0}
-        .top-progress-handle:active{cursor:grabbing;transform:translateX(50%) scale(1.4);box-shadow:0 4px 12px rgba(124,58,237,0.8)}
-        .top-progress-handle:hover{transform:translateX(50%) scale(1.15)}
-        .canvas{width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;background:#000;position:relative;flex:1}
-        #flipbook{background:white;box-shadow:0 0 40px rgba(0,0,0,0.4);overflow:hidden;max-width:100%;max-height:100%}
-        .page{background:white;display:flex!important;justify-content:center;align-items:center;overflow:hidden}
-        .page img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
-        .touch-zone{position:absolute;height:100%;top:0;cursor:pointer;z-index:5}
-        .touch-zone-left{left:0;width:30%}
-        .touch-zone-right{right:0;width:30%}
-        .touch-zone:hover{background:rgba(255,255,255,0.01)}
-        .page-info{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.15);color:white;padding:12px 24px;border-radius:24px;font-size:.95em;font-weight:600;backdrop-filter:blur(10px);z-index:10;pointer-events:none}
-        .floating-nav{position:fixed;top:24px;display:flex;gap:16px;z-index:20}
-        .floating-nav.left{left:24px}
-        .floating-nav.right{right:24px}
-        .nav-btn{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;cursor:pointer;font-size:1.3em;transition:all .3s;box-shadow:0 8px 24px rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
-        .nav-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(124,58,237,0.4)}
-        .nav-btn:active{transform:translateY(-1px)}
-        .nav-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:0 4px 12px rgba(124,58,237,0.2)}
-        .settings-btn{position:fixed;bottom:30px;right:30px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;cursor:pointer;font-size:1.5em;transition:all .3s;box-shadow:0 8px 24px rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;z-index:20}
-        .settings-btn:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(124,58,237,0.4)}
-        .settings-btn:active{transform:scale(1.05)}
-        @media (max-width:768px){
-            .nav-btn{width:44px;height:44px;font-size:1.1em}
-            .page-info{bottom:20px;padding:10px 20px;font-size:.85em}
-            .settings-btn{bottom:20px;right:20px;width:50px;height:50px;font-size:1.2em}
-            .loading-icon{font-size:4em}
-            .loading-text{font-size:1.1em}
-            .progress-container{margin:25px 0}
-            .progress-bar{height:6px}
-            .top-progress-container{height:5px}
-            .top-progress-handle{width:12px;height:12px}
+        
+        :root {
+            --brand-color: #7c3aed;
+            --brand-color-dark: #6d28d9;
+            --brand-color-light: #a855f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body { font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #1a1a1a; -webkit-tap-highlight-color: transparent; }
+        .app { display: flex; width: 100%; height: 100%; }
+
+        /* 로딩 화면 */
+        .loading-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); transition: opacity 0.5s ease; position: fixed; z-index: 100; }
+        .loading-content { text-align: center; max-width: 400px; width: 90%; }
+        .loading-icon { font-size: 5em; margin-bottom: 30px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .loading-text { font-size: 1.3em; color: #888; font-weight: 500; margin-bottom: 10px; }
+        .loading::after { content: '...'; animation: dots 1.5s steps(4) infinite; }
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
+        .progress-container { margin: 30px 0; display: flex; flex-direction: column; gap: 16px; }
+        .progress-bar { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--brand-color) 0%, var(--brand-color-light) 100%); border-radius: 4px; width: 0%; transition: width 0.3s ease; box-shadow: 0 0 16px rgba(124, 58, 237, 0.6); }
+        .progress-text { text-align: center; color: #aaa; font-size: 0.95em; font-weight: 600; letter-spacing: 0.5px; }
+        .progress-status { text-align: center; color: #888; font-size: 0.85em; margin-top: 8px; min-height: 20px; }
+        .loading-credit { font-size: .9em; color: #666; margin-top: 40px; line-height: 1.8; }
+        .loading-credit-title { font-size: .95em; color: #888; font-weight: 600; margin-bottom: 8px; }
+        .loading-credit-text { color: #666; font-size: .85em; }
+        .loading-credit-link { color: var(--brand-color); text-decoration: none; font-weight: 600; transition: all .3s; }
+        .loading-credit-link:hover { color: var(--brand-color-light); text-decoration: underline; }
+
+        /* 뷰어 화면 */
+        .viewer-screen { display: none; flex-direction: column; width: 100%; height: 100%; background: #000; position: relative; overflow: hidden; }
+        .viewer-screen.show { display: flex; }
+        .top-progress-container { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); position: relative; cursor: pointer; user-select: none; flex-shrink: 0; }
+        .top-progress-bar { height: 100%; background: linear-gradient(90deg, var(--brand-color) 0%, var(--brand-color-light) 100%); width: 0%; display: flex; align-items: center; justify-content: flex-end; }
+        .top-progress-handle { width: 14px; height: 14px; background: white; border-radius: 50%; transform: translateX(50%); cursor: grab; box-shadow: 0 2px 8px rgba(124, 58, 237, 0.5); flex-shrink: 0; }
+        .canvas { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #000; position: relative; flex: 1; }
+        #flipbook { background: white; box-shadow: 0 0 40px rgba(0, 0, 0, 0.4); overflow: hidden; }
+        .page { background: white; display: flex !important; justify-content: center; align-items: center; overflow: hidden; }
+        .page img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
+        
+        /* 터치 영역: z-index를 높여 다른 요소 위에 있도록 보장 */
+        .touch-zone { position: absolute; height: 100%; top: 0; cursor: pointer; z-index: 10; }
+        .touch-zone-left { left: 0; width: 30%; }
+        .touch-zone-right { right: 0; width: 30%; }
+
+        .page-info { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.15); color: white; padding: 12px 24px; border-radius: 24px; font-size: .95em; font-weight: 600; backdrop-filter: blur(10px); z-index: 15; pointer-events: none; }
+
+        /* 데스크톱 플로팅 메뉴 */
+        .floating-nav { position: fixed; top: 24px; display: flex; gap: 16px; z-index: 20; }
+        .floating-nav.left { left: 24px; }
+        .floating-nav.right { right: 24px; }
+        .nav-btn { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--brand-color) 0%, var(--brand-color-dark) 100%); color: white; border: none; cursor: pointer; font-size: 1.3em; transition: all .3s; box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); user-select: none; }
+        .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4); }
+        .nav-btn:active { transform: translateY(-1px); }
+        .nav-btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2); transform: none; }
+
+        /* 모바일 플로팅 메뉴 */
+        .mobile-floating-nav { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; gap: 20px; z-index: 25; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+        .mobile-floating-nav.show { opacity: 1; pointer-events: auto; }
+        .mobile-nav-btn { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, var(--brand-color) 0%, var(--brand-color-dark) 100%); color: white; border: 2px solid rgba(255, 255, 255, 0.2); cursor: pointer; font-size: 1.5em; box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); user-select: none; }
+        .mobile-nav-btn:active { transform: scale(0.95); }
+        .mobile-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        @media (max-width: 768px) {
+            .floating-nav { display: none; }
+            .page-info { bottom: 20px; padding: 10px 20px; font-size: .85em; }
+        }
+        @media (min-width: 769px) {
+            .mobile-floating-nav { display: none; }
         }
     </style>
 </head>
@@ -72,15 +86,11 @@
             <div class="loading-content">
                 <div class="loading-icon">📄</div>
                 <div class="loading-text loading">PDF 로딩 중</div>
-                
                 <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
                     <div class="progress-text" id="progressPercentage">0%</div>
                     <div class="progress-status" id="progressStatus"></div>
                 </div>
-                
                 <div class="loading-credit">
                     <div class="loading-credit-title">PDF Flipbook</div>
                     <div class="loading-credit-text">
@@ -93,23 +103,15 @@
 
         <div class="viewer-screen" id="viewerScreen">
             <div class="top-progress-container" id="topProgressContainer">
-                <div class="top-progress-bar" id="topProgressBar">
-                    <div class="top-progress-handle" id="topProgressHandle"></div>
-                </div>
+                <div class="top-progress-bar" id="topProgressBar"><div class="top-progress-handle" id="topProgressHandle"></div></div>
             </div>
-
-            <div class="floating-nav left">
-                <button class="nav-btn" id="firstBtn" title="처음으로">⏮</button>
+            <div class="floating-nav left"><button class="nav-btn" id="firstBtn" title="처음으로">⏮</button></div>
+            <div class="canvas" id="canvas"><div id="flipbook"></div></div>
+            <div class="floating-nav right"><button class="nav-btn" id="lastBtn" title="끝으로">⏭</button></div>
+            <div class="mobile-floating-nav" id="mobileFloatingNav">
+                <button class="mobile-nav-btn" id="mobileFirstBtn" title="처음으로">⏮</button>
+                <button class="mobile-nav-btn" id="mobileLastBtn" title="끝으로">⏭</button>
             </div>
-
-            <div class="canvas" id="canvas">
-                <div id="flipbook"></div>
-            </div>
-
-            <div class="floating-nav right">
-                <button class="nav-btn" id="lastBtn" title="끝으로">⏭</button>
-            </div>
-
             <div class="touch-zone touch-zone-left" id="touchZoneLeft"></div>
             <div class="touch-zone touch-zone-right" id="touchZoneRight"></div>
             <div class="page-info" id="pageInfo">0/0</div>
@@ -122,68 +124,41 @@
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        <!-- PDF URL 시작 -->
+        const PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/flip.pdf';
+        <!-- PDF URL 끝 -->
+        let pdfDoc = null, isMobileDevice = false, pdfOrientation = 'portrait', flipbookReady = false, isDragging = false, menuVisibleTimer = null;
 
-        // 여기에 PDF URL을 직접 입력합니다.
-        const FIXED_PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/flip.pdf';
+        const loadingScreen = document.getElementById('loadingScreen');
+        const viewerScreen = document.getElementById('viewerScreen');
 
-        let pdfDoc = null;
-        let isMobileDevice = false;
-        let pdfOrientation = 'portrait';
-        let flipbookReady = false;
-        let isDragging = false;
-
-        function detectDevice(){
-            const ua = navigator.userAgent.toLowerCase();
-            isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(ua);
+        function detectDevice() { isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(navigator.userAgent.toLowerCase()); }
+        
+        function hideLoading() {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => { loadingScreen.style.display = 'none'; }, 500);
         }
 
-        function getRenderScale(){
-            // PC는 scale 2, 모바일은 scale 1로 렌더링
-            return isMobileDevice ? 1 : 2;
-        }
-
-        function getAnimationDuration(){
-            // 모바일은 300ms, PC는 1000ms
-            return isMobileDevice ? 300 : 1000;
-        }
-
-        function getElevation(){
-            // 모바일은 낮은 elevation, PC는 높은 elevation
-            return isMobileDevice ? 10 : 50;
-        }
-
-        function showLoading(){
-            document.getElementById('loadingScreen').style.display='flex';
-            document.getElementById('viewerScreen').classList.remove('show');
-        }
-
-        function showViewer(){
-            document.getElementById('loadingScreen').style.display='none';
-            document.getElementById('viewerScreen').classList.add('show');
-        }
-
+        function showViewer() { viewerScreen.classList.add('show'); }
+        
         function updateProgress(current, total, status = '') {
             const percentage = Math.round((current / total) * 100);
             document.getElementById('progressFill').style.width = percentage + '%';
             document.getElementById('progressPercentage').textContent = percentage + '%';
-            if (status) {
-                document.getElementById('progressStatus').textContent = status;
-            }
+            if (status) document.getElementById('progressStatus').textContent = status;
         }
 
-        async function loadFixedPDF(){
-            showLoading();
+        async function loadPDF() {
             try {
                 updateProgress(0, 100, 'PDF 파일 다운로드 중...');
-                const response = await fetch(FIXED_PDF_URL);
-                if(!response.ok) throw new Error('PDF 파일을 로드할 수 없습니다.');
+                const response = await fetch(PDF_URL);
+                if (!response.ok) throw new Error('PDF 파일을 로드할 수 없습니다.');
                 
-                updateProgress(30, 100, 'PDF 파일 분석 중...');
-                const blob = await response.blob();
-                const arrayBuffer = await blob.arrayBuffer();
+                updateProgress(30, 100, 'PDF 데이터 변환 중...');
+                const arrayBuffer = await (await response.blob()).arrayBuffer();
                 
                 updateProgress(50, 100, 'PDF 문서 초기화 중...');
-                pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 
                 updateProgress(60, 100, 'PDF 정보 분석 중...');
                 await analyzePDF();
@@ -191,214 +166,178 @@
                 updateProgress(70, 100, 'PDF 페이지 렌더링 중...');
                 await renderFlipbook();
             } catch (error) {
-                console.error(error);
-                alert('PDF 로드 실패: '+error.message);
+                console.error(error); alert('PDF 로드 실패: ' + error.message);
             }
         }
 
-        async function analyzePDF(){
+        async function analyzePDF() {
             const numPages = pdfDoc.numPages;
             let landscapeCount = 0;
-            for(let i=1;i<=numPages;i++){
+            for (let i = 1; i <= numPages; i++) {
                 const page = await pdfDoc.getPage(i);
-                const vp = page.getViewport({scale:1});
-                if(vp.width>vp.height) landscapeCount++;
+                if (page.getViewport({ scale: 1 }).width > page.getViewport({ scale: 1 }).height) landscapeCount++;
             }
-            pdfOrientation = landscapeCount>numPages/2?'landscape':'portrait';
+            pdfOrientation = landscapeCount > numPages / 2 ? 'landscape' : 'portrait';
         }
 
-        async function renderFlipbook(){
-            const flipbook=document.getElementById('flipbook');
-            flipbook.innerHTML='';
-            const numPages=pdfDoc.numPages;
-            const scale = getRenderScale();
-            
-            for(let i=1;i<=numPages;i++){
-                const progressPercentage = 70 + ((i / numPages) * 25);
-                updateProgress(progressPercentage, 100, `페이지 렌더링: ${i}/${numPages}`);
-                
-                const page=await pdfDoc.getPage(i);
-                const vp=page.getViewport({scale:scale});
-                const canvas=document.createElement('canvas');
-                canvas.width=vp.width;
-                canvas.height=vp.height;
-                await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-                const div=document.createElement('div');
-                div.className='page';
-                div.innerHTML=`<img src="${canvas.toDataURL('image/png')}" alt="Page ${i}">`;
+        async function renderFlipbook() {
+            const flipbook = document.getElementById('flipbook');
+            flipbook.innerHTML = '';
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                updateProgress(70 + ((i / pdfDoc.numPages) * 25), 100, `페이지 렌더링: ${i}/${pdfDoc.numPages}`);
+                const page = await pdfDoc.getPage(i);
+                const vp = page.getViewport({ scale: 2 });
+                const canvas = document.createElement('canvas');
+                canvas.width = vp.width; canvas.height = vp.height;
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                const div = document.createElement('div');
+                div.className = 'page';
+                div.innerHTML = `<img src="${canvas.toDataURL('image/jpeg', 0.9)}" alt="Page ${i}">`;
                 flipbook.appendChild(div);
             }
-            
             updateProgress(95, 100, 'Flipbook 초기화 중...');
             initFlipbook();
         }
 
-        function initFlipbook(){
-            const {width,height,display}=getOptimalSize();
-            const duration = getAnimationDuration();
-            const elevation = getElevation();
+        function initFlipbook() {
+            showViewer(); 
+            const { width, height, display } = getOptimalSize();
             
-            $('#flipbook').turn({
-                width,height,display,
-                autoCenter:true,
-                duration:duration,
-                elevation:elevation,
-                gradients:true,
-                when:{turned:updatePage}
+            $('#flipbook').turn({ 
+                width, height, display, 
+                autoCenter: true, 
+                duration: isMobileDevice ? 500 : 1000, 
+                elevation: isMobileDevice ? 20 : 50, 
+                gradients: true, 
+                when: { turned: (event, page) => updatePage(page) } 
             });
-            flipbookReady=true;
+
+            flipbookReady = true;
             updateProgress(100, 100, '완료!');
-            setTimeout(() => {
-                showViewer();
-                setupTouchZones();
-                setupNavigationButtons();
-                setupTopProgressBar();
-            }, 300);
-            updatePage();
+            hideLoading();
+            
+            bindEvents();
+            updatePage($('#flipbook').turn('page'));
         }
+        
+        // *** FIX: Re-calculated for optimal size and guaranteed touch zones ***
+        function getOptimalSize() {
+            const topBarHeight = document.getElementById('topProgressContainer').offsetHeight;
+            const availableWidth = viewerScreen.clientWidth;
+            const availableHeight = viewerScreen.clientHeight - topBarHeight;
+            
+            let width, height, display;
 
-        function getOptimalSize(){
-            let width,height,display;
-            if(isMobileDevice){
-                width=window.innerWidth;height=window.innerHeight;display='single';
-            }else{
-                display=pdfOrientation==='landscape'?'single':'double';
-                if(pdfOrientation==='landscape'){
-                    width=Math.min(window.innerWidth*0.98,1500);
-                    height=Math.min(window.innerHeight*0.98,800);
-                }else{
-                    width=Math.min(window.innerWidth*0.95,1100);
-                    height=Math.min(window.innerHeight*0.98,900);
-                }
+            if (isMobileDevice) {
+                // Mobile: Use 100% width for immersive swiping. Touch zones will overlay the content.
+                width = availableWidth;
+                height = availableHeight;
+                display = 'single';
+            } else {
+                // PC: Use 95% of the screen to leave margins for the touch zones to be clickable.
+                width = availableWidth * 0.95;
+                height = availableHeight * 0.95;
+                display = (pdfOrientation === 'landscape') ? 'single' : 'double';
             }
-            return {width,height,display};
+
+            return { width, height, display };
         }
 
-        function setupTouchZones(){
-            const touchZoneLeft = document.getElementById('touchZoneLeft');
-            const touchZoneRight = document.getElementById('touchZoneRight');
-            
-            touchZoneLeft.addEventListener('click', function(e){
-                e.stopPropagation();
-                if(flipbookReady) {
-                    $('#flipbook').turn('previous');
-                }
-            });
-            
-            touchZoneRight.addEventListener('click', function(e){
-                e.stopPropagation();
-                if(flipbookReady) {
-                    $('#flipbook').turn('next');
-                }
-            });
+        function updatePage(page) {
+            if (!flipbookReady) return;
+            const total = pdfDoc.numPages;
+            document.getElementById('pageInfo').textContent = `${page} / ${total}`;
+            document.getElementById('firstBtn').disabled = document.getElementById('mobileFirstBtn').disabled = (page <= 1);
+            document.getElementById('lastBtn').disabled = document.getElementById('mobileLastBtn').disabled = (page >= total);
+            document.getElementById('topProgressBar').style.width = (page / total) * 100 + '%';
         }
 
-        function setupNavigationButtons(){
-            document.getElementById('firstBtn').addEventListener('click',function(e){
-                e.stopPropagation();
-                if(flipbookReady) {
-                    $('#flipbook').turn('page', 1);
-                }
-            });
-            
-            document.getElementById('lastBtn').addEventListener('click',function(e){
-                e.stopPropagation();
-                if(flipbookReady) {
-                    const totalPages = $('#flipbook').turn('pages');
-                    $('#flipbook').turn('page', totalPages);
-                }
-            });
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileFloatingNav');
+            menu.classList.add('show');
+            clearTimeout(menuVisibleTimer);
+            menuVisibleTimer = setTimeout(() => menu.classList.remove('show'), 3000);
         }
 
-        function setupTopProgressBar(){
-            const container = document.getElementById('topProgressContainer');
-            const bar = document.getElementById('topProgressBar');
+        function bindEvents() {
+            const canvas = document.getElementById('canvas');
+            const progressContainer = document.getElementById('topProgressContainer');
             const handle = document.getElementById('topProgressHandle');
             
-            function calculatePageFromPosition(x){
-                const rect = container.getBoundingClientRect();
-                const relativeX = Math.max(0, Math.min(x - rect.left, rect.width));
-                const percentage = relativeX / rect.width;
-                const total = $('#flipbook').turn('pages');
-                const page = Math.max(1, Math.min(total, Math.ceil(percentage * total)));
-                return page;
-            }
+            document.getElementById('firstBtn').addEventListener('click', () => $('#flipbook').turn('page', 1));
+            document.getElementById('lastBtn').addEventListener('click', () => $('#flipbook').turn('page', pdfDoc.numPages));
+            document.getElementById('mobileFirstBtn').addEventListener('click', () => { $('#flipbook').turn('page', 1); document.getElementById('mobileFloatingNav').classList.remove('show'); });
+            document.getElementById('mobileLastBtn').addEventListener('click', () => { $('#flipbook').turn('page', pdfDoc.numPages); document.getElementById('mobileFloatingNav').classList.remove('show'); });
+            
+            document.getElementById('touchZoneLeft').addEventListener('click', () => $('#flipbook').turn('previous'));
+            document.getElementById('touchZoneRight').addEventListener('click', () => $('#flipbook').turn('next'));
 
-            function updateProgressBarPosition(){
-                if(!flipbookReady) return;
-                const current = $('#flipbook').turn('page');
-                const total = $('#flipbook').turn('pages');
-                const percentage = (current / total) * 100;
-                bar.style.width = percentage + '%';
-            }
-
-            function handleProgressClick(e){
-                if(isDragging || !flipbookReady) return;
-                
-                const page = calculatePageFromPosition(e.clientX);
-                $('#flipbook').turn('page', page);
-            }
-
-            function handleDragStart(e){
-                isDragging = true;
-                e.preventDefault();
-            }
-
-            function handleDragMove(e){
-                if(!isDragging || !flipbookReady) return;
-                
-                const page = calculatePageFromPosition(e.clientX);
-                $('#flipbook').turn('page', page);
-            }
-
-            function handleDragEnd(){
-                isDragging = false;
-            }
-
-            // 마우스 이벤트
-            container.addEventListener('click', handleProgressClick);
-            handle.addEventListener('mousedown', handleDragStart);
-            document.addEventListener('mousemove', handleDragMove);
-            document.addEventListener('mouseup', handleDragEnd);
-
-            // 터치 이벤트
-            handle.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                e.preventDefault();
+            let touchStartX = 0;
+            canvas.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            canvas.addEventListener('touchend', (e) => {
+                const diff = touchStartX - e.changedTouches[0].clientX;
+                if (diff > 50) $('#flipbook').turn('next');
+                else if (diff < -50) $('#flipbook').turn('previous');
+            });
+            canvas.addEventListener('click', (e) => {
+                if (!isMobileDevice) return;
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                if (clickX > rect.width * 0.3 && clickX < rect.width * 0.7) toggleMobileMenu();
             });
 
-            document.addEventListener('touchmove', (e) => {
-                if(!isDragging || !flipbookReady) return;
-                
-                const touch = e.touches[0];
-                const page = calculatePageFromPosition(touch.clientX);
-                $('#flipbook').turn('page', page);
+            const calculatePage = (x) => {
+                const rect = progressContainer.getBoundingClientRect();
+                const percentage = Math.max(0, Math.min(x - rect.left, rect.width)) / rect.width;
+                return Math.max(1, Math.min(pdfDoc.numPages, Math.ceil(percentage * pdfDoc.numPages)));
+            };
+            const dragMove = (e) => {
+                if (!isDragging) return;
+                const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+                const page = calculatePage(clientX);
+                if ($('#flipbook').turn('page') !== page) $('#flipbook').turn('page', page);
+            };
+            const dragEnd = () => {
+                if (!isDragging) return; isDragging = false;
+                document.removeEventListener('mousemove', dragMove); document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('touchmove', dragMove); document.removeEventListener('touchend', dragEnd);
+            };
+            const dragStart = (e) => {
+                isDragging = true; e.preventDefault();
+                document.addEventListener('mousemove', dragMove); document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('touchmove', dragMove); document.addEventListener('touchend', dragEnd);
+            };
+            handle.addEventListener('mousedown', dragStart); handle.addEventListener('touchstart', dragStart);
+            progressContainer.addEventListener('click', (e) => { if (!isDragging) $('#flipbook').turn('page', calculatePage(e.clientX)); });
+
+            document.addEventListener('keydown', (e) => {
+                if (!flipbookReady) return;
+                if (e.key === 'ArrowLeft') $('#flipbook').turn('previous');
+                else if (e.key === 'ArrowRight') $('#flipbook').turn('next');
+                else if (e.key === 'Home') $('#flipbook').turn('page', 1);
+                else if (e.key === 'End') $('#flipbook').turn('page', pdfDoc.numPages);
             });
 
-            document.addEventListener('touchend', () => {
-                isDragging = false;
-            });
-
-            // 페이지 변경 시 프로그레스 바 업데이트
-            $('#flipbook').on('turned', updateProgressBarPosition);
-            updateProgressBarPosition();
+            const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
+            const handleResize = () => {
+                if (!flipbookReady) return;
+                const { width, height, display } = getOptimalSize();
+                if ($('#flipbook').turn('display') !== display) {
+                    $('#flipbook').turn('destroy');
+                    // Re-initialize with a delay to ensure DOM is ready after destroy
+                    setTimeout(initFlipbook, 50); 
+                } else {
+                    $('#flipbook').turn('size', width, height);
+                }
+            };
+            window.addEventListener('resize', debounce(handleResize, 250));
+            window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
         }
 
-        function updatePage(){
-            const current=$('#flipbook').turn('page');
-            const total=$('#flipbook').turn('pages');
-            document.getElementById('pageInfo').textContent=`${current} / ${total}`;
-        }
-
-        window.addEventListener('resize',()=>{if(flipbookReady)handleResize()});
-        function handleResize(){
-            if(!flipbookReady) return;
-            const {width,height,display}=getOptimalSize();
-            $('#flipbook').turn('size',width,height);
-        }
-
-        window.addEventListener('DOMContentLoaded',detectDevice);
-        window.addEventListener('load',()=>setTimeout(loadFixedPDF,500));
+        window.addEventListener('DOMContentLoaded', () => {
+            detectDevice();
+            loadPDF();
+        });
     </script>
 </body>
 </html>
