@@ -6,362 +6,54 @@
     <title>PDF 플립북</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
-            font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #000;
-            color: #1a1a1a;
-        }
-
-        .app {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .loading-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        }
-
-        .loading-content {
-            text-align: center;
-        }
-
-        .loading-icon {
-            font-size: 5em;
-            margin-bottom: 30px;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .loading-text {
-            font-size: 1.3em;
-            color: #888;
-            font-weight: 500;
-            margin-bottom: 10px;
-        }
-
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s steps(4) infinite;
-        }
-
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-
-        .loading-credit {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 40px;
-            line-height: 1.8;
-        }
-
-        .loading-credit-title {
-            font-size: 0.95em;
-            color: #888;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .loading-credit-text {
-            color: #666;
-            font-size: 0.85em;
-        }
-
-        .loading-credit-link {
-            color: #7c3aed;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .loading-credit-link:hover {
-            color: #a855f7;
-            text-decoration: underline;
-        }
-
-        .viewer-screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .viewer-screen.show {
-            display: flex;
-        }
-
-        .canvas {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            background: #000;
-            position: relative;
-        }
-
-        #flipbook {
-            background: white;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
-            border-radius: 0;
-            overflow: hidden;
-            max-width: 100%;
-            max-height: 100%;
-        }
-
-        .page {
-            background: white;
-            display: flex !important;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        .page img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            pointer-events: none;
-        }
-
-        .touch-zone {
-            position: absolute;
-            height: 100%;
-            top: 0;
-            cursor: pointer;
-            z-index: 5;
-        }
-
-        .touch-zone-left {
-            left: 0;
-            width: 30%;
-        }
-
-        .touch-zone-right {
-            right: 0;
-            width: 30%;
-        }
-
-        .touch-zone:hover {
-            background: rgba(255, 255, 255, 0.01);
-        }
-
-        .page-info {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
-            font-size: 0.95em;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        /* ============================================
-           수정: 플로팅 메뉴 (데스크톱만 표시)
-           ============================================ */
-        .floating-nav {
-            position: fixed;
-            top: 24px;
-            display: flex;
-            gap: 16px;
-            z-index: 20;
-        }
-
-        .floating-nav.left {
-            left: 24px;
-        }
-
-        .floating-nav.right {
-            right: 24px;
-        }
-
-        .nav-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 1.3em;
-            transition: all 0.3s;
-            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
-        }
-
-        .nav-btn:active {
-            transform: translateY(-1px);
-        }
-
-        .nav-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
-        }
-
-        .nav-btn:disabled:hover {
-            transform: none;
-        }
-
-        /* ============================================
-           수정: 모바일 플로팅 메뉴 (토글 방식)
-           화면 중앙 터치 시 나타남
-           ============================================ */
-        .mobile-floating-nav {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: none;
-            gap: 20px;
-            z-index: 25;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .mobile-floating-nav.show {
-            display: flex;
-            opacity: 1;
-        }
-
-        .mobile-nav-btn {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5em;
-            transition: all 0.3s;
-            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .mobile-nav-btn:active {
-            transform: scale(0.95);
-        }
-
-        .mobile-nav-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .page-info {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
-            font-size: 0.95em;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        @media (max-width: 768px) {
-            /* ============================================
-               수정: 모바일에서 데스크톱 플로팅 메뉴 숨김
-               ============================================ */
-            .floating-nav {
-                display: none !important;
-            }
-
-            .page-info {
-                bottom: 20px;
-                padding: 10px 20px;
-                font-size: 0.85em;
-            }
-
-            .loading-icon {
-                font-size: 4em;
-            }
-
-            .loading-text {
-                font-size: 1.1em;
-            }
-
-            .loading-credit {
-                margin-top: 30px;
-            }
-
-            .loading-credit-text {
-                font-size: 0.8em;
-            }
-        }
-
-        @media (min-width: 769px) {
-            /* ============================================
-               수정: 데스크톱에서 모바일 플로팅 메뉴 숨김
-               ============================================ */
-            .mobile-floating-nav {
-                display: none !important;
-            }
+        *{margin:0;padding:0;box-sizing:border-box}
+        html,body{width:100%;height:100%;overflow:hidden}
+        body{font-family:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#000;color:#1a1a1a}
+        .app{display:flex;width:100%;height:100%}
+        .loading-screen{display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%;background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%)}
+        .loading-content{text-align:center}
+        .loading-icon{font-size:5em;margin-bottom:30px;animation:bounce 2s infinite}
+        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+        .loading-text{font-size:1.3em;color:#888;font-weight:500;margin-bottom:10px}
+        .loading::after{content:'...';animation:dots 1.5s steps(4) infinite}
+        @keyframes dots{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+        .loading-credit{font-size:.9em;color:#666;margin-top:40px;line-height:1.8}
+        .loading-credit-title{font-size:.95em;color:#888;font-weight:600;margin-bottom:8px}
+        .loading-credit-text{color:#666;font-size:.85em}
+        .loading-credit-link{color:#7c3aed;text-decoration:none;font-weight:600;transition:all .3s}
+        .loading-credit-link:hover{color:#a855f7;text-decoration:underline}
+        .viewer-screen{display:none;width:100%;height:100%;background:#000;position:relative;overflow:hidden}
+        .viewer-screen.show{display:flex}
+        .canvas{width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;background:#000;position:relative}
+        #flipbook{background:white;box-shadow:0 0 40px rgba(0,0,0,0.4);overflow:hidden;max-width:100%;max-height:100%}
+        .page{background:white;display:flex!important;justify-content:center;align-items:center;overflow:hidden}
+        .page img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+        .touch-zone{position:absolute;height:100%;top:0;cursor:pointer;z-index:5}
+        .touch-zone-left{left:0;width:30%}
+        .touch-zone-right{right:0;width:30%}
+        .touch-zone:hover{background:rgba(255,255,255,0.01)}
+        .page-info{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.15);color:white;padding:12px 24px;border-radius:24px;font-size:.95em;font-weight:600;backdrop-filter:blur(10px);z-index:10;pointer-events:none}
+        .floating-nav{position:fixed;top:24px;display:flex;gap:16px;z-index:20}
+        .floating-nav.left{left:24px}
+        .floating-nav.right{right:24px}
+        .nav-btn{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;cursor:pointer;font-size:1.3em;transition:all .3s;box-shadow:0 8px 24px rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
+        .nav-btn:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(124,58,237,0.4)}
+        .nav-btn:active{transform:translateY(-1px)}
+        .nav-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:0 4px 12px rgba(124,58,237,0.2)}
+        .settings-btn{position:fixed;bottom:30px;right:30px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);color:white;border:none;cursor:pointer;font-size:1.5em;transition:all .3s;box-shadow:0 8px 24px rgba(124,58,237,0.3);display:flex;align-items:center;justify-content:center;z-index:20}
+        .settings-btn:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(124,58,237,0.4)}
+        .settings-btn:active{transform:scale(1.05)}
+        @media (max-width:768px){
+            .nav-btn{width:44px;height:44px;font-size:1.1em}
+            .page-info{bottom:20px;padding:10px 20px;font-size:.85em}
+            .settings-btn{bottom:20px;right:20px;width:50px;height:50px;font-size:1.2em}
+            .loading-icon{font-size:4em}
+            .loading-text{font-size:1.1em}
         }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- 로딩 화면 -->
         <div class="loading-screen" id="loadingScreen">
             <div class="loading-content">
                 <div class="loading-icon">📄</div>
@@ -376,29 +68,17 @@
             </div>
         </div>
 
-        <!-- 뷰어 화면 -->
         <div class="viewer-screen" id="viewerScreen">
-            <!-- ============================================
-                 수정: 데스크톱 플로팅 메뉴 (항상 표시)
-                 ============================================ -->
             <div class="floating-nav left">
                 <button class="nav-btn" id="firstBtn" title="처음으로">⏮</button>
             </div>
-            
+
             <div class="canvas" id="canvas">
                 <div id="flipbook"></div>
             </div>
 
             <div class="floating-nav right">
                 <button class="nav-btn" id="lastBtn" title="끝으로">⏭</button>
-            </div>
-
-            <!-- ============================================
-                 수정: 모바일 플로팅 메뉴 (중앙, 터치 시 나타남)
-                 ============================================ -->
-            <div class="mobile-floating-nav" id="mobileFloatingNav">
-                <button class="mobile-nav-btn" id="mobileFirstBtn" title="처음으로">⏮</button>
-                <button class="mobile-nav-btn" id="mobileLastBtn" title="끝으로">⏭</button>
             </div>
 
             <div class="touch-zone touch-zone-left" id="touchZoneLeft"></div>
@@ -414,337 +94,128 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+        <!-- 여기에 PDF URL을 직접 입력합니다. -->
+        const FIXED_PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/flip.pdf';
+
         let pdfDoc = null;
         let isMobileDevice = false;
         let pdfOrientation = 'portrait';
         let flipbookReady = false;
 
-        // ============================================
-        // 수정: PDF URL 지정
-        // ============================================
-        const PDF_URL = 'https://raw.githubusercontent.com/ThornJSH/flip_PDF/main/이슈와 놀자 최종 보고서.pdf';
-
-        function detectDevice() {
+        function detectDevice(){
             const ua = navigator.userAgent.toLowerCase();
             isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|mobile|opera mini/.test(ua);
         }
 
-        function showLoading() {
-            document.getElementById('loadingScreen').style.display = 'flex';
+        function showLoading(){
+            document.getElementById('loadingScreen').style.display='flex';
             document.getElementById('viewerScreen').classList.remove('show');
         }
 
-        function showViewer() {
-            document.getElementById('loadingScreen').style.display = 'none';
+        function showViewer(){
+            document.getElementById('loadingScreen').style.display='none';
             document.getElementById('viewerScreen').classList.add('show');
         }
 
-        // ============================================
-        // 수정: URL 직접 로드 함수
-        // ============================================
-        async function loadPDFDirect() {
+        async function loadFixedPDF(){
             showLoading();
-
             try {
-                const response = await fetch(PDF_URL);
-                if (!response.ok) {
-                    throw new Error('PDF 파일을 로드할 수 없습니다');
-                }
-
+                const response = await fetch(FIXED_PDF_URL);
+                if(!response.ok) throw new Error('PDF 파일을 로드할 수 없습니다.');
                 const blob = await response.blob();
                 const arrayBuffer = await blob.arrayBuffer();
-                
-                pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
                 await analyzePDF();
                 await renderFlipbook();
             } catch (error) {
-                console.error('Error:', error);
-                showLoading();
-                setTimeout(() => {
-                    alert('PDF 로드 실패: ' + error.message);
-                    location.reload();
-                }, 2000);
+                console.error(error);
+                alert('PDF 로드 실패: '+error.message);
             }
         }
 
-        async function analyzePDF() {
+        async function analyzePDF(){
             const numPages = pdfDoc.numPages;
             let landscapeCount = 0;
-
-            for (let i = 1; i <= numPages; i++) {
+            for(let i=1;i<=numPages;i++){
                 const page = await pdfDoc.getPage(i);
-                const vp = page.getViewport({ scale: 1 });
-                if (vp.width > vp.height) landscapeCount++;
+                const vp = page.getViewport({scale:1});
+                if(vp.width>vp.height) landscapeCount++;
             }
-
-            pdfOrientation = landscapeCount > numPages / 2 ? 'landscape' : 'portrait';
+            pdfOrientation = landscapeCount>numPages/2?'landscape':'portrait';
         }
 
-        async function renderFlipbook() {
-            const flipbook = document.getElementById('flipbook');
-            flipbook.innerHTML = '';
-
-            const numPages = pdfDoc.numPages;
-
-            for (let i = 1; i <= numPages; i++) {
-                const page = await pdfDoc.getPage(i);
-                const vp = page.getViewport({ scale: 2 });
-
-                const canvas = document.createElement('canvas');
-                canvas.width = vp.width;
-                canvas.height = vp.height;
-
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-
-                const div = document.createElement('div');
-                div.className = 'page';
-                div.innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="Page ${i}">`;
+        async function renderFlipbook(){
+            const flipbook=document.getElementById('flipbook');
+            flipbook.innerHTML='';
+            const numPages=pdfDoc.numPages;
+            for(let i=1;i<=numPages;i++){
+                const page=await pdfDoc.getPage(i);
+                const vp=page.getViewport({scale:2});
+                const canvas=document.createElement('canvas');
+                canvas.width=vp.width;
+                canvas.height=vp.height;
+                await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+                const div=document.createElement('div');
+                div.className='page';
+                div.innerHTML=`<img src="${canvas.toDataURL('image/png')}" alt="Page ${i}">`;
                 flipbook.appendChild(div);
             }
-
             initFlipbook();
         }
 
-        function initFlipbook() {
-            const { width, height, display } = getOptimalSize();
-
+        function initFlipbook(){
+            const {width,height,display}=getOptimalSize();
             $('#flipbook').turn({
-                width, height, display,
-                autoCenter: true,
-                duration: isMobileDevice ? 500 : 1000,
-                pages: pdfDoc.numPages,
-                elevation: isMobileDevice ? 20 : 50,
-                gradients: true,
-                when: { turned: updatePage }
+                width,height,display,
+                autoCenter:true,
+                duration:isMobileDevice?500:1000,
+                elevation:isMobileDevice?20:50,
+                gradients:true,
+                when:{turned:updatePage}
             });
-
-            flipbookReady = true;
+            flipbookReady=true;
             showViewer();
             updatePage();
-            updateNavButtons();
             setupTouchZones();
         }
 
-        function getOptimalSize() {
-            let width, height, display;
-
-            if (isMobileDevice) {
-                width = window.innerWidth;
-                height = window.innerHeight;
-                display = 'single';
-            } else {
-                display = pdfOrientation === 'landscape' ? 'single' : 'double';
-                
-                if (pdfOrientation === 'landscape') {
-                    width = Math.min(window.innerWidth * 0.98, 1500);
-                    height = Math.min(window.innerHeight * 0.98, 800);
-                } else {
-                    width = Math.min(window.innerWidth * 0.95, 1100);
-                    height = Math.min(window.innerHeight * 0.98, 900);
+        function getOptimalSize(){
+            let width,height,display;
+            if(isMobileDevice){
+                width=window.innerWidth;height=window.innerHeight;display='single';
+            }else{
+                display=pdfOrientation==='landscape'?'single':'double';
+                if(pdfOrientation==='landscape'){
+                    width=Math.min(window.innerWidth*0.98,1500);
+                    height=Math.min(window.innerHeight*0.98,800);
+                }else{
+                    width=Math.min(window.innerWidth*0.95,1100);
+                    height=Math.min(window.innerHeight*0.98,900);
                 }
             }
-
-            return { width, height, display };
+            return {width,height,display};
         }
 
-        // ============================================
-        // 수정: 모바일 플로팅 메뉴 토글 기능
-        // 화면 중앙을 터치하면 메뉴 표시/숨김
-        // ============================================
-        let menuVisibleTimer = null;
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileFloatingNav');
-            menu.classList.add('show');
-
-            clearTimeout(menuVisibleTimer);
-            menuVisibleTimer = setTimeout(() => {
-                menu.classList.remove('show');
-            }, 3000); // 3초 후 자동 숨김
+        function setupTouchZones(){
+            document.getElementById('touchZoneLeft').addEventListener('click',()=>$('#flipbook').turn('previous'));
+            document.getElementById('touchZoneRight').addEventListener('click',()=>$('#flipbook').turn('next'));
         }
 
-        function setupTouchZones() {
-            const leftZone = document.getElementById('touchZoneLeft');
-            const rightZone = document.getElementById('touchZoneRight');
-            const canvas = document.getElementById('canvas');
-
-            leftZone.addEventListener('click', () => {
-                $('#flipbook').turn('previous');
-                // 모바일에서 터치 존 클릭 시에도 메뉴 표시
-                if (isMobileDevice) {
-                    toggleMobileMenu();
-                }
-            });
-
-            rightZone.addEventListener('click', () => {
-                $('#flipbook').turn('next');
-                // 모바일에서 터치 존 클릭 시에도 메뉴 표시
-                if (isMobileDevice) {
-                    toggleMobileMenu();
-                }
-            });
-
-            // ============================================
-            // 수정: 화면 중앙 터치 감지
-            // 중앙을 터치하면 메뉴 표시
-            // ============================================
-            canvas.addEventListener('click', (e) => {
-                if (!isMobileDevice) return;
-
-                const rect = canvas.getBoundingClientRect();
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-
-                const distX = Math.abs(clickX - centerX);
-                const distY = Math.abs(clickY - centerY);
-
-                // 중앙 영역 (400x400 픽셀)을 터치했을 때만 메뉴 표시
-                if (distX < 200 && distY < 200) {
-                    toggleMobileMenu();
-                }
-            });
-
-            // 터치 스와이프 지원
-            let touchStartX = 0;
-            canvas.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
-            });
-
-            canvas.addEventListener('touchend', (e) => {
-                const touchEndX = e.changedTouches[0].clientX;
-                const diff = touchStartX - touchEndX;
-
-                if (diff > 50) {
-                    $('#flipbook').turn('next');
-                } else if (diff < -50) {
-                    $('#flipbook').turn('previous');
-                }
-            });
+        function updatePage(){
+            const current=$('#flipbook').turn('page');
+            const total=$('#flipbook').turn('pages');
+            document.getElementById('pageInfo').textContent=`${current} / ${total}`;
         }
 
-        function updatePage() {
-            const current = $('#flipbook').turn('page');
-            const total = $('#flipbook').turn('pages');
-            document.getElementById('pageInfo').textContent = `${current} / ${total}`;
-            updateNavButtons();
+        window.addEventListener('resize',()=>{if(flipbookReady)handleResize()});
+        function handleResize(){
+            if(!flipbookReady||!$('#flipbook').turn('is'))return;
+            const {width,height,display}=getOptimalSize();
+            $('#flipbook').turn('size',width,height);
         }
 
-        function updateNavButtons() {
-            const current = $('#flipbook').turn('page');
-            const total = $('#flipbook').turn('pages');
-
-            // 데스크톱 버튼
-            document.getElementById('firstBtn').disabled = current === 1;
-            document.getElementById('lastBtn').disabled = current === total;
-
-            // 모바일 버튼
-            document.getElementById('mobileFirstBtn').disabled = current === 1;
-            document.getElementById('mobileLastBtn').disabled = current === total;
-        }
-
-        function handleResize() {
-            if (!flipbookReady || !$('#flipbook').turn('is')) return;
-
-            const { width, height, display } = getOptimalSize();
-            const current = $('#flipbook').turn('display');
-
-            if (current !== display) {
-                $('#flipbook').turn('destroy');
-                initFlipbook();
-            } else {
-                $('#flipbook').turn('size', width, height);
-            }
-        }
-
-        // ============================================
-        // 수정: 데스크톱 버튼 이벤트
-        // ============================================
-        document.getElementById('firstBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (flipbookReady && $('#flipbook').turn('is')) {
-                $('#flipbook').turn('page', 1);
-            }
-        }, false);
-
-        document.getElementById('lastBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (flipbookReady && $('#flipbook').turn('is')) {
-                const total = $('#flipbook').turn('pages');
-                $('#flipbook').turn('page', total);
-            }
-        }, false);
-
-        // ============================================
-        // 수정: 모바일 버튼 이벤트
-        // ============================================
-        document.getElementById('mobileFirstBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (flipbookReady && $('#flipbook').turn('is')) {
-                $('#flipbook').turn('page', 1);
-                // 클릭 후 메뉴 자동 숨김
-                document.getElementById('mobileFloatingNav').classList.remove('show');
-            }
-        }, false);
-
-        document.getElementById('mobileLastBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (flipbookReady && $('#flipbook').turn('is')) {
-                const total = $('#flipbook').turn('pages');
-                $('#flipbook').turn('page', total);
-                // 클릭 후 메뉴 자동 숨김
-                document.getElementById('mobileFloatingNav').classList.remove('show');
-            }
-        }, false);
-
-        document.addEventListener('keydown', (e) => {
-            if (flipbookReady) {
-                if (e.key === 'ArrowLeft') $('#flipbook').turn('previous');
-                else if (e.key === 'ArrowRight') $('#flipbook').turn('next');
-                else if (e.key === 'Home') {
-                    if ($('#flipbook').turn('is')) {
-                        $('#flipbook').turn('page', 1);
-                    }
-                }
-                else if (e.key === 'End') {
-                    if ($('#flipbook').turn('is')) {
-                        const total = $('#flipbook').turn('pages');
-                        $('#flipbook').turn('page', total);
-                    }
-                }
-            }
-        });
-
-        window.addEventListener('orientationchange', () => {
-            setTimeout(handleResize, 100);
-        });
-
-        window.addEventListener('resize', debounce(handleResize, 300));
-
-        function debounce(func, delay) {
-            let timer;
-            return () => {
-                clearTimeout(timer);
-                timer = setTimeout(func, delay);
-            };
-        }
-
-        // 초기화
-        window.addEventListener('DOMContentLoaded', () => {
-            detectDevice();
-        });
-
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                loadPDFDirect();
-            }, 500);
-        });
+        window.addEventListener('DOMContentLoaded',detectDevice);
+        window.addEventListener('load',()=>setTimeout(loadFixedPDF,500));
     </script>
 </body>
 </html>
